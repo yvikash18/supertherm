@@ -1,0 +1,67 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}
+const { eyebrow, title, subtitle } = Astro.props;
+const path = Astro.url.pathname;
+
+// Build a real, clickable breadcrumb trail from the current path.
+const segments = path.split('/').filter(Boolean);
+const cap = (s: string) => s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const crumbs = [
+  { label: 'Home', href: '/' },
+  ...segments.map((seg, i) => ({
+    label: cap(seg),
+    href: '/' + segments.slice(0, i + 1).join('/'),
+  })),
+];
+
+const site = 'https://www.superthermcorporations.com';
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: crumbs.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.label,
+    item: site + c.href,
+  })),
+};
+---
+
+<section
+  data-ondark
+  class="bg-grid relative overflow-hidden border-b border-line bg-[radial-gradient(120%_100%_at_50%_0%,#16161b,#0a0a0b_70%)] pb-14 pt-36"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  <div class="glow-blob" data-parallax="0.25" style="width:460px;height:460px;background:#d63f00;right:-6%;top:-40%;opacity:0.22"></div>
+  <div class="glow-blob" style="width:320px;height:320px;background:#ff9d3d;left:-4%;bottom:-50%;opacity:0.15"></div>
+
+  <div class="relative mx-auto w-full max-w-3xl px-5 sm:px-6">
+    <nav aria-label="Breadcrumb" class="mb-[1.1rem]" data-reveal>
+      <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8rem]">
+        {crumbs.map((c, i) => (
+          <li class="flex items-center gap-2">
+            {i > 0 && <span class="text-faint" aria-hidden="true">/</span>}
+            {i < crumbs.length - 1 ? (
+              <a href={c.href} class="text-faint transition-colors hover:text-molten-300 focus-visible:text-molten-300 focus-visible:outline-none">{c.label}</a>
+            ) : (
+              <span class="text-molten-300" aria-current="page">{c.label}</span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+    {eyebrow && <span class="eyebrow" data-reveal style="--reveal-delay:60ms">{eyebrow}</span>}
+    <h1 class="mt-3.5 text-[clamp(2.4rem,6vw,4rem)] font-bold leading-[1.05]" data-reveal style="--reveal-delay:120ms">{title}</h1>
+    {
+      subtitle && (
+        <p class="mt-5 max-w-2xl text-[1.1rem] leading-7 text-muted" data-reveal style="--reveal-delay:200ms">
+          {subtitle}
+        </p>
+      )
+    }
+  </div>
+</section>

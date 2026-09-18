@@ -1,0 +1,15 @@
+# Cloudflare Pages headers
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# Hashed build assets — cache forever
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Media assets — cache a day
+/assets/*
+  Cache-Control: public, max-age=86400

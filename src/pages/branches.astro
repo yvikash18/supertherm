@@ -1,0 +1,162 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { company, branches, countries, companyDetails } from '../data/site';
+import { heroFor } from '../data/content';
+
+const hero = heroFor('branches', {
+  eyebrow: 'Branches',
+  title: 'Close to your factory floor',
+  subtitle: 'A head office and works in Haryana, backed by regional offices nationwide and a service reach that spans nine countries.',
+});
+
+const mapQuery = encodeURIComponent(
+  `${company.address.line1}, ${company.address.line2}, ${company.address.country}`
+);
+const mapEmbed = `https://www.google.com/maps?q=${mapQuery}&z=14&output=embed`;
+---
+
+<Layout title={`Branches & Contact Offices — ${company.name}`} description="Supertherm head office & works in Bahadurgarh (Haryana) plus branch offices in Aurangabad, Ludhiana, Bengaluru, Kanpur, Kolkata and Balasore — serving nine countries across Asia & the Gulf.">
+  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+
+  <section class="py-20">
+    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {branches.map((b, i) => (
+          <article
+            class:list={[
+              'card card-glow relative flex flex-col p-7',
+              b.primary && 'md:col-span-2 lg:col-span-3 border-molten-300/30 bg-gradient-to-br from-molten-500/10 to-ink-3',
+            ]}
+            data-reveal
+            style={`--reveal-delay:${(i % 3) * 80}ms`}
+          >
+            {b.primary && (
+              <span class="absolute right-5 top-5 rounded-full border border-molten-300/30 px-2.5 py-1 text-[0.7rem] uppercase tracking-[0.12em] text-molten-300">Head Office</span>
+            )}
+            <div class="flex items-center gap-3">
+              <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-molten-300/25 bg-molten-500/10">
+                <Icon name="pin" class="h-5 w-5 text-molten-300" />
+              </span>
+              <div>
+                <h3 class="text-[1.3rem] leading-tight">{b.city}</h3>
+                <p class="text-[0.82rem] text-muted">{b.region} · {b.role}</p>
+              </div>
+            </div>
+
+            <div class:list={['mt-5 flex flex-col gap-3', b.primary && 'lg:flex-row lg:gap-10']}>
+              <div class="flex-1">
+                {b.contact && (
+                  <p class="mb-2 text-[0.88rem]"><span class="text-faint">Contact: </span><span class="font-medium text-fg">{b.contact}</span></p>
+                )}
+                <p class="flex items-start gap-2 text-[0.88rem] leading-[1.6] text-muted">
+                  <Icon name="pin" class="mt-0.5 h-4 w-4 shrink-0 text-molten-300" />{b.address}
+                </p>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                {b.phones.map((ph) => (
+                  <a href={`tel:${ph.replace(/[^0-9+]/g, '')}`} class="inline-flex items-center gap-2 text-[0.88rem] transition-colors hover:text-molten-300">
+                    <Icon name="phone" class="h-4 w-4 shrink-0 text-molten-300" />{ph}
+                  </a>
+                ))}
+                <a href={`mailto:${b.email}`} class="inline-flex items-center gap-2 break-all text-[0.88rem] text-muted transition-colors hover:text-molten-300">
+                  <Icon name="mail" class="h-4 w-4 shrink-0 text-molten-300" />{b.email}
+                </a>
+                {b.primary && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+                    target="_blank"
+                    rel="noopener"
+                    class="mt-1 inline-flex w-fit items-center gap-2 text-[0.88rem] font-semibold text-molten-300 hover:underline"
+                  >
+                    <Icon name="arrow" class="h-4 w-4" />View on map
+                  </a>
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <!-- Company registration / statutory details -->
+      <div class="card mt-6 p-7" data-reveal>
+        <h3 class="mb-5 flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.16em] text-faint">
+          <Icon name="chip" class="h-4 w-4 text-molten-300" /> Company details
+        </h3>
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            ['GST No.', companyDetails.gst],
+            ['PAN', companyDetails.pan],
+            ['Udyog Aadhar', companyDetails.udyogAadhar],
+            ['Company ARN', companyDetails.arn],
+            ['HSN — Machines', companyDetails.hsnMachines],
+            ['HSN — Services', companyDetails.hsnServices],
+          ].map(([k, v]) => (
+            <div>
+              <dt class="text-[0.72rem] uppercase tracking-[0.08em] text-faint">{k}</dt>
+              <dd class="mt-1 break-all text-[0.9rem] font-medium text-fg">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- Countries -->
+  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
+    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
+      <div class="max-w-2xl" data-reveal>
+        <span class="eyebrow">International</span>
+        <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.6rem)] font-bold">Serving <span class="text-gradient">nine countries</span> and counting</h2>
+        <p class="mt-3.5 leading-7 text-muted">Machines installed and supported across South Asia, Southeast Asia and the Gulf.</p>
+      </div>
+      <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {countries.map((c, i) => (
+          <div class="flex items-center gap-3 rounded-[0.9rem] border border-line bg-ink px-5 py-4 font-medium transition-all duration-300 hover:-translate-y-1 hover:border-molten-400" data-reveal="scale" style={`--reveal-delay:${i * 50}ms`}>
+            <Icon name="globe" class="h-[1.3rem] w-[1.3rem] shrink-0 text-molten-300" /><span>{c}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Head office map card -->
+  <section class="py-24">
+    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
+      <div class="card grid grid-cols-1 overflow-hidden lg:grid-cols-2" data-reveal="scale">
+        <div class="p-10">
+          <span class="eyebrow">Visit us</span>
+          <h3 class="mt-3.5 text-[1.6rem]">Head Office &amp; Works</h3>
+          <p class="mb-7 mt-4 leading-8 text-muted">
+            {company.address.line1}<br />{company.address.line2}<br />{company.address.country}
+          </p>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(company.address.line1 + ' ' + company.address.line2)}`}
+            target="_blank"
+            rel="noopener"
+            class="btn btn-primary"
+            data-magnetic="0.35"
+          >
+            Open in Maps <Icon name="arrow" class="h-[1.1rem] w-[1.1rem]" />
+          </a>
+        </div>
+        <div class="relative min-h-[20rem] bg-ink-3 lg:min-h-full">
+          <iframe
+            title="Supertherm Corporations — Head Office & Works location, Bahadurgarh"
+            src={mapEmbed}
+            class="absolute inset-0 h-full w-full border-0"
+            style="filter: grayscale(0.25) contrast(1.05) brightness(0.95);"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+          <div class="pointer-events-none absolute inset-0 ring-1 ring-inset ring-line"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</Layout>

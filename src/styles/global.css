@@ -1,0 +1,374 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/*  Supertherm design tokens — dark industrial + molten glow          */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Semantic colors as RGB triplets (space-separated) so Tailwind utilities
+     support opacity modifiers, e.g. bg-ink/70. Themed by overriding these. */
+  --c-ink: 10 10 11;
+  --c-ink-2: 16 16 19;
+  --c-ink-3: 22 22 27;
+  --c-panel: 27 27 33;
+  --c-line: 38 38 46;
+
+  --c-fg: 244 244 246;
+  --c-muted: 160 160 171;
+  --c-faint: 108 108 120;
+
+  /* Molten accent ramp (constant across themes — brand) */
+  --c-molten-50: 255 245 236;
+  --c-molten-100: 255 230 204;
+  --c-molten-200: 255 196 135;
+  --c-molten-300: 255 157 61;
+  --c-molten-400: 255 122 24;
+  --c-molten-500: 247 93 2;
+  --c-molten-600: 214 63 0;
+  --c-molten-700: 166 44 0;
+  --c-ember: 255 179 71;
+
+  /* Hex-style aliases for the component CSS in @layer components / scoped styles */
+  --color-ink: rgb(var(--c-ink));
+  --color-ink-2: rgb(var(--c-ink-2));
+  --color-ink-3: rgb(var(--c-ink-3));
+  --color-panel: rgb(var(--c-panel));
+  --color-line: rgb(var(--c-line));
+  --color-fg: rgb(var(--c-fg));
+  --color-muted: rgb(var(--c-muted));
+  --color-faint: rgb(var(--c-faint));
+  --color-molten-50: rgb(var(--c-molten-50));
+  --color-molten-100: rgb(var(--c-molten-100));
+  --color-molten-200: rgb(var(--c-molten-200));
+  --color-molten-300: rgb(var(--c-molten-300));
+  --color-molten-400: rgb(var(--c-molten-400));
+  --color-molten-500: rgb(var(--c-molten-500));
+  --color-molten-600: rgb(var(--c-molten-600));
+  --color-molten-700: rgb(var(--c-molten-700));
+  --color-ember: rgb(var(--c-ember));
+
+  /* Fonts */
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: dark;
+}
+
+/* Light theme — surfaces & text flip; molten accent stays. */
+html.light {
+  --c-ink: 255 255 255;
+  --c-ink-2: 247 248 250;
+  --c-ink-3: 240 242 246;
+  --c-panel: 255 255 255;
+  --c-line: 224 227 233;
+
+  --c-fg: 22 24 30;
+  --c-muted: 82 90 104;
+  --c-faint: 128 136 150;
+
+  color-scheme: light;
+}
+
+/* Sections that always sit on dark imagery keep light text in BOTH themes.
+   Also set `color` here so headings with no explicit text utility (which inherit
+   the body's computed color) stay light instead of turning dark in light mode. */
+[data-ondark] {
+  --c-fg: 244 244 246;
+  --c-muted: 202 202 212;
+  --c-faint: 150 150 162;
+  --c-line: 60 60 70;
+  color: rgb(var(--c-fg));
+}
+
+/* Transparent top bar sits over the dark hero → keep its text light until
+   scrolled. Scoped to [data-topbar] only, so the open mobile panel (which has
+   its own solid background) keeps normal theme contrast. */
+[data-header]:not(.is-scrolled) [data-topbar] {
+  --c-fg: 244 244 246;
+  --c-muted: 202 202 212;
+  --c-faint: 150 150 162;
+  --c-line: 60 60 70;
+  color: rgb(var(--c-fg));
+}
+
+/* Theme-toggle icon: show sun in dark, moon in light */
+html:not(.light) [data-theme-icon='moon'] { display: none; }
+html.light [data-theme-icon='sun'] { display: none; }
+
+/* Google Translate — hide the injected banner/gadget; we drive it from our dropdown */
+#google_translate_element { display: none !important; }
+.goog-te-banner-frame,
+.goog-te-gadget-icon,
+.goog-logo-link,
+.goog-te-balloon-frame { display: none !important; }
+.goog-te-gadget { height: 0; overflow: hidden; }
+body { top: 0 !important; position: static !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+.skiptranslate iframe { display: none !important; }
+
+/* ------------------------------------------------------------------ */
+/*  Base                                                              */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* clip (not hidden) prevents horizontal scroll without breaking position:sticky */
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    overflow-x: clip;
+    max-width: 100%;
+  }
+
+  ::selection {
+    background: var(--color-molten-500);
+    color: #fff;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Native select dropdown options — keep them readable on the dark theme.
+     Without this, light-inherited text renders light-on-white (invisible). */
+  select option {
+    background-color: var(--color-ink-2);
+    color: var(--color-fg);
+  }
+  select:invalid,
+  select option[value=''] {
+    color: var(--color-faint);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-ink); }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--color-molten-600), var(--color-molten-400));
+    border-radius: 99px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reusable component utilities                                       */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .container-x {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  .text-gradient {
+    background: linear-gradient(120deg, var(--color-molten-300), var(--color-ember) 40%, var(--color-molten-500));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.9rem 1.6rem;
+    border-radius: 999px;
+    transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo), background 0.3s;
+    will-change: transform;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(120deg, var(--color-molten-300), var(--color-molten-500));
+    box-shadow: 0 10px 30px -10px rgba(247, 93, 2, 0.6);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 16px 45px -8px rgba(247, 93, 2, 0.75);
+  }
+
+  .btn-ghost {
+    /* read --c-fg directly (not the root-resolved alias) so it responds to
+       [data-ondark] on the hero and to the light/dark theme */
+    color: rgb(var(--c-fg));
+    border: 1px solid rgb(var(--c-line));
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-molten-400);
+    color: var(--color-molten-200);
+  }
+
+  /* Glass / bordered card surface */
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    overflow: hidden;
+  }
+
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(130deg, transparent 40%, var(--color-molten-400), transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.5s;
+    /* Decorative border-glow must never intercept clicks on card content */
+    pointer-events: none;
+  }
+  .card-glow:hover::before { opacity: 1; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-molten-300);
+  }
+  .eyebrow::before {
+    content: '';
+    width: 1.75rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-molten-500), transparent);
+  }
+
+  /* Subtle grid / noise backdrop */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .heat-underline {
+    position: relative;
+  }
+  .heat-underline::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -6px;
+    height: 3px; width: 0;
+    background: linear-gradient(90deg, var(--color-molten-400), var(--color-ember));
+    border-radius: 2px;
+    transition: width 0.4s var(--ease-out-expo);
+  }
+  .heat-underline:hover::after { width: 100%; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Animation primitives (driven by IntersectionObserver in Layout)   */
+/* ------------------------------------------------------------------ */
+/* Guarded behind html.js so content stays visible if JS fails to load */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.js [data-reveal='scale'] { transform: scale(0.94); }
+.js [data-reveal='scale'].is-visible { transform: scale(1); }
+.js [data-reveal='left'] { transform: translateX(-40px); }
+.js [data-reveal='left'].is-visible { transform: translateX(0); }
+.js [data-reveal='right'] { transform: translateX(40px); }
+.js [data-reveal='right'].is-visible { transform: translateX(0); }
+
+/* Molten glow blobs */
+@keyframes float-glow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -24px, 0) scale(1.08); }
+}
+.glow-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: float-glow 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1.05); }
+  to { transform: scale(1.16); }
+}
+
+@keyframes scroll-cue {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(14px); opacity: 0; }
+}
+
+/* Hero banner crossfade slides */
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 1.4s ease;
+}
+.hero-slide.active {
+  opacity: 1;
+  animation: ken-burns 8s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide.active { animation: none; transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}

@@ -1,0 +1,157 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import { company, products } from '../data/site';
+import { heroFor } from '../data/content';
+
+const hero = heroFor('contact', {
+  eyebrow: 'Contact',
+  title: "Let's engineer your heat",
+  subtitle: 'Tell us about your part and process — our engineers will get back with the right induction solution.',
+});
+
+const waNumber = company.phoneRaw.replace(/[^0-9]/g, '');
+
+const inputCls =
+  'w-full rounded-xl border border-line bg-ink px-4 py-3.5 text-[0.95rem] text-fg placeholder:text-faint transition-[border-color,box-shadow] duration-200 focus:border-molten-400 focus:outline-none focus:ring-[3px] focus:ring-molten-500/15';
+---
+
+<Layout title={`Contact — ${company.name}`} description="Talk to Supertherm's engineers. Call, email or send an enquiry about induction hardening, forging, melting or welding systems.">
+  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+
+  <section class="py-20">
+    <div class="mx-auto grid w-full max-w-7xl items-start gap-8 px-5 sm:px-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <!-- info cards -->
+      <div class="flex flex-col gap-4">
+        {[
+          { href: `tel:${company.phoneRaw}`, icon: 'phone', label: 'Sales', value: company.phone, glow: true },
+          { href: `tel:${company.supportRaw}`, icon: 'support', label: '24/7 Support', value: company.support, glow: true },
+          { href: `mailto:${company.email}`, icon: 'mail', label: 'Email', value: company.email, glow: true },
+        ].map((c, i) => (
+          <a href={c.href} class="card card-glow flex items-center gap-4 p-6" data-tilt data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-[0.85rem] border border-molten-300/[0.22] bg-gradient-to-br from-molten-300/[0.16] to-molten-500/[0.06]">
+              <Icon name={c.icon} class="h-6 w-6 text-molten-300" />
+            </span>
+            <div class="min-w-0">
+              <span class="block text-[0.78rem] uppercase tracking-[0.12em] text-faint">{c.label}</span>
+              <strong class="block break-words text-[1.02rem]">{c.value}</strong>
+            </div>
+          </a>
+        ))}
+
+        <div class="card flex items-center gap-4 p-6" data-reveal style="--reveal-delay:210ms">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-[0.85rem] border border-molten-300/[0.22] bg-gradient-to-br from-molten-300/[0.16] to-molten-500/[0.06]">
+            <Icon name="pin" class="h-6 w-6 text-molten-300" />
+          </span>
+          <div>
+            <span class="block text-[0.78rem] uppercase tracking-[0.12em] text-faint">Head office</span>
+            <strong class="block text-[1.02rem]">{company.address.line1}</strong>
+            <p class="mt-0.5 text-[0.9rem] text-muted">{company.address.line2}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 rounded-2xl border border-molten-300/25 bg-gradient-to-br from-molten-500/[0.08] to-transparent p-6" data-reveal style="--reveal-delay:280ms">
+          <Icon name="clock" class="h-[1.6rem] w-[1.6rem] shrink-0 text-molten-300" />
+          <div>
+            <strong>Mon–Sat · 9:00–18:00 IST</strong>
+            <p class="mt-0.5 text-[0.88rem] text-muted">Emergency service line open 24/7</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- form -->
+      <div class="card card-glow p-9" data-reveal="right">
+        <h2 class="text-[1.6rem]">Send an enquiry</h2>
+        <p class="mt-2 text-muted">We typically respond within one business day.</p>
+
+        <form class="mt-7 flex flex-col gap-[1.1rem]" data-contact-form data-wa={waNumber}>
+          <div class="flex flex-col gap-[0.45rem]">
+            <label for="name" class="text-[0.85rem] font-medium text-muted">Full name</label>
+            <input id="name" name="name" type="text" required placeholder="Your name" class={inputCls} />
+          </div>
+          <div class="grid grid-cols-1 gap-[1.1rem] sm:grid-cols-2">
+            <div class="flex flex-col gap-[0.45rem]">
+              <label for="email" class="text-[0.85rem] font-medium text-muted">Email</label>
+              <input id="email" name="email" type="email" required placeholder="you@company.com" class={inputCls} />
+            </div>
+            <div class="flex flex-col gap-[0.45rem]">
+              <label for="phone" class="text-[0.85rem] font-medium text-muted">Phone</label>
+              <input id="phone" name="phone" type="tel" placeholder="+91…" class={inputCls} />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 gap-[1.1rem] sm:grid-cols-2">
+            <div class="flex flex-col gap-[0.45rem]">
+              <label for="company" class="text-[0.85rem] font-medium text-muted">Company</label>
+              <input id="company" name="company" type="text" placeholder="Company name" class={inputCls} />
+            </div>
+            <div class="flex flex-col gap-[0.45rem]">
+              <label for="interest" class="text-[0.85rem] font-medium text-muted">Interested in</label>
+              <div class="relative">
+                <select
+                  id="interest"
+                  name="interest"
+                  class={`${inputCls} cursor-pointer appearance-none pr-11`}
+                >
+                  <option value="">Select a product…</option>
+                  {products.map((p) => <option value={p.name}>{p.name}</option>)}
+                  <option value="Other">Other / not sure</option>
+                </select>
+                <svg
+                  class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-molten-300"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-[0.45rem]">
+            <label for="message" class="text-[0.85rem] font-medium text-muted">Tell us about your part &amp; process</label>
+            <textarea id="message" name="message" rows="4" placeholder="Part, material, tonnage, cycle time, quantity…" class={`${inputCls} resize-y`}></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary mt-2 justify-center" data-magnetic="0.3">
+            Send enquiry via WhatsApp <Icon name="arrow" class="h-[1.15rem] w-[1.15rem]" />
+          </button>
+          <p class="text-center text-[0.8rem] text-faint">Opens WhatsApp with your details pre-filled — or call {company.phone}.</p>
+          <p class="text-center text-[0.85rem] text-molten-200" data-form-note hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+  const note = document.querySelector<HTMLElement>('[data-form-note]');
+  const wa = form?.dataset.wa;
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const d = Object.fromEntries(new FormData(form)) as Record<string, string>;
+    const text = [
+      'New enquiry — Supertherm Corporations',
+      `Name: ${d.name || ''}`,
+      `Email: ${d.email || ''}`,
+      `Phone: ${d.phone || ''}`,
+      `Company: ${d.company || ''}`,
+      `Interested in: ${d.interest || 'General'}`,
+      '',
+      d.message || '',
+    ].join('\n');
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+    if (note) {
+      note.hidden = false;
+      note.textContent = 'Opening WhatsApp to send your enquiry…';
+      note.className = 'text-center text-[0.9rem] text-emerald-400';
+    }
+  });
+</script>

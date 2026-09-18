@@ -1,0 +1,183 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { company, products } from '../data/site';
+import { heroFor } from '../data/content';
+
+const hero = heroFor('products', {
+  eyebrow: 'Our products',
+  title: 'Induction systems for every process',
+  subtitle:
+    'Four core product lines — Forge Master forging, Supertherm Scan hardening, medium-frequency melting furnaces and CFI high-frequency welders. Each engineered to your part, tonnage and cycle-time, and built in-house.',
+});
+
+const site = 'https://www.superthermcorporations.com';
+// Product structured data for SEO (Google rich results / product understanding)
+const productSchema = products.map((p) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: p.name,
+  image: site + p.image,
+  description: p.seoDescription,
+  category: 'Induction Heating Equipment',
+  brand: { '@type': 'Brand', name: company.name },
+  manufacturer: { '@type': 'Organization', name: company.name },
+  url: `${site}/products#${p.slug}`,
+  offers: {
+    '@type': 'Offer',
+    availability: 'https://schema.org/InStock',
+    priceCurrency: 'INR',
+    price: '0',
+    priceValidUntil: '2027-12-31',
+    seller: { '@type': 'Organization', name: company.name },
+  },
+}));
+---
+
+<Layout
+  title="Induction Heating Machines — Forging, Hardening, Melting & HF Welding | Supertherm"
+  description="Manufacturer & supplier of induction forging machines, induction hardening machines, medium-frequency melting furnaces and high-frequency welders. IGBT power sources 50 KW–2000 KW, built in India, exported across Asia & the Gulf."
+>
+  <!-- SEO: Product structured data -->
+  {productSchema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+
+  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+
+  <!-- Sticky quick-nav -->
+  <nav aria-label="Product sections" class="sticky top-[4.75rem] z-20 border-b border-line bg-ink/85 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-7xl gap-2.5 overflow-x-auto px-5 py-3.5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {products.map((p) => (
+        <a href={`#${p.slug}`} class="inline-flex flex-none items-center gap-2 whitespace-nowrap rounded-full border border-line px-4 py-2 text-[0.85rem] text-muted transition-all duration-300 hover:border-molten-400 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-molten-500">
+          <Icon name={p.icon} class="h-4 w-4 text-molten-300" />{p.name}
+        </a>
+      ))}
+    </div>
+  </nav>
+
+  {products.map((p, i) => (
+    <section id={p.slug} class:list={['scroll-mt-32 border-b border-line py-16 sm:py-20', i % 2 === 1 && 'bg-gradient-to-b from-ink-2 to-ink']}>
+      <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
+        <!-- Intro: image + copy -->
+        <div class="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+          <div class:list={['order-1', i % 2 === 1 ? 'lg:order-2' : 'lg:order-1']} data-reveal={i % 2 === 1 ? 'right' : 'left'}>
+            <div class="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-line bg-ink-2">
+              <img src={p.image} alt={`${p.name} — ${p.series}`} width="800" height="600" loading="lazy" class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]" />
+              <div class="absolute inset-0 bg-[linear-gradient(160deg,transparent_55%,rgba(10,10,11,0.7))]"></div>
+              <span class="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-molten-300/30 bg-ink/60 backdrop-blur"><Icon name={p.icon} class="h-5 w-5 text-molten-300" /></span>
+              <span class="absolute bottom-4 left-4 rounded-full border border-line bg-ink/70 px-3.5 py-1.5 font-display text-[0.82rem] tracking-[0.03em] text-fg backdrop-blur">{p.series}</span>
+            </div>
+          </div>
+
+          <div class:list={['order-2', i % 2 === 1 ? 'lg:order-1' : 'lg:order-2']} data-reveal={i % 2 === 1 ? 'left' : 'right'}>
+            <span class="eyebrow">{p.tag}</span>
+            <h2 class="mt-3 text-[clamp(1.8rem,4vw,2.6rem)] font-bold leading-[1.1]">{p.name}</h2>
+            <p class="mt-4 max-w-prose leading-[1.75] text-muted">{p.blurb}</p>
+
+            <!-- Quick spec chips -->
+            <ul class="mt-6 flex flex-wrap gap-2">
+              {p.specs.map((s) => (
+                <li class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/[0.02] px-3 py-1.5 text-[0.82rem] font-medium text-fg">
+                  <Icon name="check" class="h-3.5 w-3.5 text-molten-400" />{s}
+                </li>
+              ))}
+            </ul>
+
+            <!-- Applications -->
+            <div class="mt-6">
+              <span class="text-[0.75rem] uppercase tracking-[0.16em] text-faint">Applications</span>
+              <div class="mt-2.5 flex flex-wrap gap-2">
+                {p.applications.map((a) => (
+                  <span class="rounded-full bg-molten-500/10 px-3 py-1 text-[0.8rem] text-molten-200">{a}</span>
+                ))}
+              </div>
+            </div>
+
+            <a href="/contact" class="btn btn-primary mt-7" data-magnetic="0.35">
+              Request a quote <Icon name="arrow" class="h-[1.05rem] w-[1.05rem]" />
+            </a>
+          </div>
+        </div>
+
+        <!-- Spec tables -->
+        <div class="mt-10 grid gap-6 lg:mt-14" data-reveal>
+          <h3 class="flex items-center gap-2 text-[0.8rem] uppercase tracking-[0.18em] text-faint">
+            <Icon name="chip" class="h-4 w-4 text-molten-300" /> Technical specifications
+          </h3>
+          <div class="grid gap-6 md:grid-cols-2">
+            {p.specGroups.map((g) => (
+              <div class="card overflow-hidden">
+                <div class="border-b border-line bg-white/[0.02] px-5 py-3">
+                  <h4 class="font-display text-[0.95rem] font-semibold text-fg">{g.title}</h4>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full border-collapse text-left text-[0.85rem] [font-variant-numeric:tabular-nums]">
+                    <thead>
+                      <tr>
+                        {g.headers.map((h) => (
+                          <th class="whitespace-nowrap border-b border-line px-5 py-2.5 text-[0.72rem] uppercase tracking-[0.1em] text-molten-300">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.rows.map((row) => (
+                        <tr class="transition-colors hover:bg-white/[0.02]">
+                          {row.map((cell, ci) => (
+                            <td class:list={['whitespace-nowrap border-b border-line/60 px-5 py-2.5', ci === 0 ? 'font-semibold text-fg' : 'text-muted']}>{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Meta + safety + highlights -->
+        <div class="mt-6 grid gap-6 lg:grid-cols-3" data-reveal>
+          <!-- Engineering details -->
+          <div class="card p-6 lg:col-span-1">
+            <h4 class="mb-4 text-[0.78rem] uppercase tracking-[0.16em] text-faint">Engineering</h4>
+            <dl class="flex flex-col gap-3.5">
+              {p.meta.map(([k, v]) => (
+                <div class="flex flex-col gap-0.5 border-b border-line/60 pb-3 last:border-0 last:pb-0">
+                  <dt class="text-[0.8rem] text-molten-200">{k}</dt>
+                  <dd class="text-[0.9rem] leading-snug text-fg">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <!-- Safety -->
+          <div class="card p-6">
+            <h4 class="mb-4 flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.16em] text-faint">
+              <Icon name="support" class="h-4 w-4 text-molten-300" /> Safety features
+            </h4>
+            <ul class="flex flex-col gap-2.5">
+              {p.safety.map((s) => (
+                <li class="flex items-start gap-2 text-[0.9rem] text-fg"><Icon name="check" class="mt-0.5 h-4 w-4 text-molten-400" />{s}</li>
+              ))}
+            </ul>
+          </div>
+
+          <!-- Highlights -->
+          <div class="card p-6">
+            <h4 class="mb-4 flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.16em] text-faint">
+              <Icon name="spark" class="h-4 w-4 text-molten-300" /> Highlights
+            </h4>
+            <ul class="flex flex-col gap-2.5">
+              {p.features.map((f) => (
+                <li class="flex items-start gap-2 text-[0.9rem] text-fg"><Icon name="spark" class="mt-0.5 h-4 w-4 text-molten-400" />{f}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <CtaBand title="Not sure which system fits?" text="Send us your part drawing and production targets — our engineers will recommend the right configuration." />
+</Layout>

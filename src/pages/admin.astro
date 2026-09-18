@@ -1,0 +1,226 @@
+---
+// Supertherm content console.
+// Standalone (not the marketing Layout), no-index. Talks only to the Supabase
+// `admin` Edge Function, which enforces the shared passcode server-side.
+import '../styles/global.css';
+const fnBase = import.meta.env.PUBLIC_SUPABASE_URL
+  ? `${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/admin`
+  : '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Content Console — Supertherm</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  </head>
+  <body class="min-h-dvh bg-ink text-fg" data-fn={fnBase}>
+    <!-- Passcode gate -->
+    <div data-gate class="grid min-h-dvh place-items-center px-5">
+      <form data-gate-form class="card w-full max-w-sm p-8">
+        <img src="/assets/logo.png" alt="Supertherm" class="mb-6 h-8 rounded bg-white px-2 py-1" />
+        <h1 class="font-display text-xl font-bold">Content console</h1>
+        <p class="mt-1 text-sm text-muted">Enter the admin passcode to continue.</p>
+        <input
+          data-passcode
+          type="password"
+          required
+          placeholder="Passcode"
+          class="mt-5 w-full rounded-xl border border-line bg-ink px-4 py-3 text-fg placeholder:text-faint focus:border-molten-400 focus:outline-none focus:ring-[3px] focus:ring-molten-500/15"
+        />
+        <button type="submit" class="btn btn-primary mt-4 w-full justify-center">Unlock</button>
+        <p data-gate-err class="mt-3 hidden text-sm text-red-400"></p>
+        {!fnBase && (
+          <p class="mt-4 rounded-lg border border-molten-500/30 bg-molten-500/10 p-3 text-xs text-molten-200">
+            Not connected: set <code>PUBLIC_SUPABASE_URL</code> and deploy the <code>admin</code> Edge Function. See <code>docs/CMS-SETUP.md</code>.
+          </p>
+        )}
+      </form>
+    </div>
+
+    <!-- Console -->
+    <div data-app class="hidden">
+      <header class="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-ink/85 px-5 py-3 backdrop-blur">
+        <div class="flex items-center gap-3">
+          <img src="/assets/logo.png" alt="Supertherm" class="h-7 rounded bg-white px-1.5 py-1" />
+          <span class="font-display text-sm font-semibold">Content Console</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input data-deploy-note placeholder="Deploy note (optional)" class="hidden w-48 rounded-lg border border-line bg-ink px-3 py-1.5 text-sm placeholder:text-faint focus:border-molten-400 focus:outline-none sm:block" />
+          <button data-deploy class="btn btn-primary px-4 py-2 text-sm">Deploy site</button>
+          <button data-lock class="btn btn-ghost px-3 py-2 text-sm">Lock</button>
+        </div>
+      </header>
+
+      <div class="mx-auto grid max-w-6xl gap-6 p-5 lg:grid-cols-[220px_1fr]">
+        <!-- Route list -->
+        <aside class="flex flex-col gap-1.5">
+          <span class="mb-1 text-[0.7rem] uppercase tracking-[0.16em] text-faint">Routes</span>
+          <nav data-routes class="flex flex-col gap-1.5"></nav>
+        </aside>
+
+        <!-- Editor -->
+        <main class="min-w-0">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h2 data-editor-title class="font-display text-lg font-semibold">Select a route</h2>
+            <span data-status class="text-sm text-muted"></span>
+          </div>
+          <textarea data-editor spellcheck="false" class="h-[46vh] w-full rounded-xl border border-line bg-ink-2 p-4 font-mono text-[0.85rem] leading-relaxed text-fg focus:border-molten-400 focus:outline-none" placeholder="Select a route to edit its content…"></textarea>
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <input data-summary placeholder="Summary of changes (what changed)" class="flex-1 rounded-xl border border-line bg-ink px-4 py-2.5 text-sm placeholder:text-faint focus:border-molten-400 focus:outline-none" />
+            <button data-save class="btn btn-primary px-5 py-2.5 text-sm">Save</button>
+          </div>
+
+          <!-- Revision history -->
+          <section class="mt-8">
+            <h3 class="mb-3 text-[0.75rem] uppercase tracking-[0.16em] text-faint">Change history</h3>
+            <ul data-revisions class="flex flex-col gap-2 text-sm text-muted"></ul>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const fn = document.body.dataset.fn;
+      const $ = (s: string) => document.querySelector(s) as HTMLElement;
+      const gate = $('[data-gate]'), app = $('[data-app]');
+      const state = { passcode: '', slug: '', pages: [] as any[] };
+
+      const api = async (action: string, body: Record<string, unknown> = {}) => {
+        if (!fn) throw new Error('Supabase function URL not configured');
+        const res = await fetch(fn, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode: state.passcode, action, ...body }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        return data;
+      };
+
+      const setStatus = (msg: string, ok = true) => {
+        const el = $('[data-status]');
+        el.textContent = msg;
+        el.className = `text-sm ${ok ? 'text-emerald-400' : 'text-red-400'}`;
+        if (msg) setTimeout(() => (el.textContent = ''), 4000);
+      };
+
+      // Unlock
+      ($('[data-gate-form]') as HTMLFormElement).addEventListener('submit', async (e) => {
+        e.preventDefault();
+        state.passcode = ($('[data-passcode]') as HTMLInputElement).value.trim();
+        const err = $('[data-gate-err]');
+        try {
+          const { pages } = await api('list');
+          state.pages = pages;
+          sessionStorage.setItem('st_pc', state.passcode);
+          gate.classList.add('hidden');
+          app.classList.remove('hidden');
+          renderRoutes();
+        } catch (e: any) {
+          err.textContent = e.message === 'unauthorized' ? 'Wrong passcode.' : e.message;
+          err.classList.remove('hidden');
+        }
+      });
+
+      const renderRoutes = () => {
+        const nav = $('[data-routes]');
+        nav.innerHTML = '';
+        state.pages.forEach((p) => {
+          const b = document.createElement('button');
+          b.textContent = p.label || p.slug;
+          b.className =
+            'rounded-lg border border-line px-3 py-2 text-left text-sm text-muted transition-colors hover:border-molten-400 hover:text-fg';
+          b.onclick = () => selectRoute(p.slug);
+          b.dataset.slug = p.slug;
+          nav.appendChild(b);
+        });
+      };
+
+      const selectRoute = async (slug: string) => {
+        state.slug = slug;
+        const p = state.pages.find((x) => x.slug === slug);
+        $('[data-editor-title]').textContent = p.label || slug;
+        ($('[data-editor]') as HTMLTextAreaElement).value = JSON.stringify(p.content, null, 2);
+        document.querySelectorAll('[data-routes] button').forEach((b) =>
+          b.classList.toggle('border-molten-400', (b as HTMLElement).dataset.slug === slug)
+        );
+        loadRevisions(slug);
+      };
+
+      const loadRevisions = async (slug: string) => {
+        const ul = $('[data-revisions]');
+        ul.innerHTML = '<li class="text-faint">Loading…</li>';
+        try {
+          const { revisions } = await api('revisions', { slug });
+          ul.innerHTML = revisions.length ? '' : '<li class="text-faint">No changes yet.</li>';
+          revisions.forEach((r: any) => {
+            const li = document.createElement('li');
+            li.className = 'rounded-lg border border-line px-3 py-2';
+            const when = new Date(r.created_at).toLocaleString();
+            li.innerHTML = `<span class="text-fg">${r.summary}</span> <span class="text-faint">· ${when} · ${r.changed_by}</span>`;
+            ul.appendChild(li);
+          });
+        } catch (e: any) {
+          ul.innerHTML = `<li class="text-red-400">${e.message}</li>`;
+        }
+      };
+
+      // Save
+      $('[data-save]').addEventListener('click', async () => {
+        if (!state.slug) return setStatus('Pick a route first', false);
+        let content;
+        try {
+          content = JSON.parse(($('[data-editor]') as HTMLTextAreaElement).value);
+        } catch {
+          return setStatus('Invalid JSON', false);
+        }
+        const summary = ($('[data-summary]') as HTMLInputElement).value.trim() || 'Content updated';
+        try {
+          await api('save', { slug: state.slug, content, summary });
+          const p = state.pages.find((x) => x.slug === state.slug);
+          p.content = content;
+          ($('[data-summary]') as HTMLInputElement).value = '';
+          setStatus('Saved ✓');
+          loadRevisions(state.slug);
+        } catch (e: any) {
+          setStatus(e.message, false);
+        }
+      });
+
+      // Deploy
+      $('[data-deploy]').addEventListener('click', async () => {
+        if (!confirm('Trigger a Cloudflare Pages deploy with the latest content?')) return;
+        const note = ($('[data-deploy-note]') as HTMLInputElement).value.trim();
+        try {
+          const r = await api('deploy', { note });
+          setStatus(r.ok ? 'Deploy triggered ✓' : 'Deploy failed', r.ok);
+        } catch (e: any) {
+          setStatus(e.message, false);
+        }
+      });
+
+      $('[data-lock]').addEventListener('click', () => {
+        sessionStorage.removeItem('st_pc');
+        location.reload();
+      });
+
+      // Resume session
+      const saved = sessionStorage.getItem('st_pc');
+      if (saved && fn) {
+        state.passcode = saved;
+        api('list')
+          .then(({ pages }) => {
+            state.pages = pages;
+            gate.classList.add('hidden');
+            app.classList.remove('hidden');
+            renderRoutes();
+          })
+          .catch(() => sessionStorage.removeItem('st_pc'));
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<a href="/" class={`group inline-flex items-center ${className}`} aria-label="Supertherm Corporations — home">
+  <span
+    class="inline-flex items-center rounded-lg bg-white px-2.5 py-1.5 shadow-[0_4px_20px_-6px_rgba(247,93,2,0.5)] ring-1 ring-white/10 transition-transform duration-300 group-hover:-translate-y-0.5"
+  >
+    <img
+      src="/assets/logo.png"
+      alt="Supertherm Corporations"
+      width="180"
+      height="40"
+      class="h-6 w-auto sm:h-7"
+    />
+  </span>
+</a>

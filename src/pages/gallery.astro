@@ -1,0 +1,165 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { company, galleryImages } from '../data/site';
+import { heroFor } from '../data/content';
+
+const hero = heroFor('gallery', {
+  eyebrow: 'Gallery',
+  title: 'Machines on the floor',
+  subtitle: 'Real installations and equipment from Supertherm projects across India and abroad. Filter by process, tap any photo to enlarge.',
+});
+
+const cats = ['Forging', 'Hardening', 'Melting', 'Welding'];
+// varied spans for an editorial masonry rhythm
+const spans = [
+  'sm:col-span-2 sm:row-span-2', '', '', 'sm:row-span-2',
+  '', 'sm:col-span-2', '', '',
+  'sm:row-span-2', '', 'sm:col-span-2 sm:row-span-2', '',
+  '', 'sm:row-span-2', '', 'sm:col-span-2',
+  '', '', 'sm:row-span-2', '',
+];
+const items = galleryImages.map((g, i) => ({
+  ...g,
+  cat: cats[i % cats.length],
+  span: spans[i % spans.length],
+  n: i + 1,
+}));
+const filters = ['All', ...cats];
+---
+
+<Layout title={`Gallery — ${company.name}`} description="A look at Supertherm induction systems on the shop floor — forging, hardening, melting and welding installations.">
+  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+
+  <section class="py-20">
+    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
+      <div class="mb-10 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap gap-2.5" data-reveal>
+          {filters.map((f, i) => (
+            <button
+              class:list={[
+                'filter-btn rounded-full border px-4 py-2 text-[0.88rem] transition-all duration-300',
+                i === 0
+                  ? 'is-active border-transparent bg-gradient-to-br from-molten-300 to-molten-500 font-semibold text-[#1a0a00]'
+                  : 'border-line text-muted hover:border-molten-400 hover:text-fg',
+              ]}
+              data-filter={f}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <span class="text-[0.82rem] text-faint" data-reveal><span data-count>{items.length}</span> installations</span>
+      </div>
+
+      <div class="grid auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[190px] sm:grid-cols-4" data-gallery>
+        {items.map((it, i) => (
+          <figure
+            class:list={[
+              'tile group relative cursor-pointer overflow-hidden rounded-2xl ring-1 ring-line transition-all duration-500 hover:ring-molten-400/60 hover:shadow-[0_24px_60px_-24px_rgba(247,93,2,0.5)]',
+              it.span,
+            ]}
+            data-cat={it.cat}
+            data-src={it.src}
+            data-title={`${it.cat} installation · #${it.n}`}
+            data-reveal="scale"
+            style={`--reveal-delay:${(i % 5) * 60}ms`}
+          >
+            <img src={it.src} alt={`Supertherm ${it.cat.toLowerCase()} installation ${it.n}`} loading="lazy" class="h-full w-full object-cover transition-transform duration-[0.8s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.12]" />
+
+            <!-- darkening + molten wash on hover -->
+            <div class="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+            <!-- index badge (always visible, subtle) -->
+            <span class="absolute left-3 top-3 rounded-full bg-ink/50 px-2 py-0.5 font-display text-[0.68rem] font-semibold text-white/70 backdrop-blur transition-colors duration-300 group-hover:bg-molten-500 group-hover:text-white">
+              {String(it.n).padStart(2, '0')}
+            </span>
+
+            <!-- centered zoom affordance -->
+            <div class="absolute inset-0 grid place-items-center">
+              <span class="grid h-12 w-12 scale-75 place-items-center rounded-full border border-white/25 bg-ink/40 opacity-0 backdrop-blur transition-all duration-500 group-hover:scale-100 group-hover:opacity-100">
+                <Icon name="expand" class="h-5 w-5 text-white" />
+              </span>
+            </div>
+
+            <!-- caption slides up -->
+            <figcaption class="absolute inset-x-0 bottom-0 flex translate-y-3 flex-col gap-0.5 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+              <span class="text-[0.7rem] uppercase tracking-[0.14em] text-molten-300">{it.cat}</span>
+              <span class="font-display text-[0.95rem] font-semibold text-white">Installation #{it.n}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div data-lightbox hidden class="fixed inset-0 z-[100] grid place-items-center bg-[#060607]/[0.94] p-6 backdrop-blur-lg [&[hidden]]:hidden">
+    <button data-lb-close aria-label="Close" class="absolute right-6 top-5 text-4xl leading-none text-muted transition-colors hover:text-molten-300">&times;</button>
+    <button data-lb-prev aria-label="Previous" class="absolute left-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-line bg-ink/60 text-3xl text-fg transition-all hover:border-molten-400 hover:text-molten-300">&#8249;</button>
+    <figure class="flex max-h-[86vh] max-w-[min(92vw,1100px)] flex-col items-center gap-3">
+      <img data-lb-img src="" alt="" class="max-h-[78vh] rounded-xl border border-line shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]" />
+      <figcaption class="flex items-center gap-3 text-[0.9rem] text-muted"><span data-lb-caption></span><span class="text-faint" data-lb-counter></span></figcaption>
+    </figure>
+    <button data-lb-next aria-label="Next" class="absolute right-4 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-line bg-ink/60 text-3xl text-fg transition-all hover:border-molten-400 hover:text-molten-300">&#8250;</button>
+  </div>
+
+  <CtaBand />
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const tiles = [...document.querySelectorAll<HTMLElement>('[data-gallery] .tile')];
+  const activeCls = ['is-active', 'border-transparent', 'bg-gradient-to-br', 'from-molten-300', 'to-molten-500', 'font-semibold', 'text-[#1a0a00]'];
+  const idleCls = ['border-line', 'text-muted'];
+  const countEl = document.querySelector('[data-count]');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => { activeCls.forEach((c) => b.classList.remove(c)); idleCls.forEach((c) => b.classList.add(c)); });
+      idleCls.forEach((c) => btn.classList.remove(c));
+      activeCls.forEach((c) => btn.classList.add(c));
+      const f = btn.dataset.filter;
+      let shown = 0;
+      tiles.forEach((t) => {
+        const ok = f === 'All' || t.dataset.cat === f;
+        t.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+      });
+      if (countEl) countEl.textContent = String(shown);
+    });
+  });
+
+  // Lightbox
+  const lb = document.querySelector<HTMLElement>('[data-lightbox]');
+  const lbImg = document.querySelector<HTMLImageElement>('[data-lb-img]');
+  const cap = document.querySelector<HTMLElement>('[data-lb-caption]');
+  const counter = document.querySelector<HTMLElement>('[data-lb-counter]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const visible = () => tiles.filter((t) => t.style.display !== 'none');
+  let current = 0;
+  const open = (i: number) => {
+    const list = visible();
+    current = (i + list.length) % list.length;
+    const t = list[current];
+    if (lbImg) lbImg.src = t.dataset.src || '';
+    if (cap) cap.textContent = t.dataset.title || '';
+    if (counter) counter.textContent = `${current + 1} / ${list.length}`;
+    lb?.removeAttribute('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => { lb?.setAttribute('hidden', ''); document.body.style.overflow = ''; };
+  tiles.forEach((t) => t.addEventListener('click', () => open(visible().indexOf(t))));
+  document.querySelector('[data-lb-close]')?.addEventListener('click', close);
+  document.querySelector('[data-lb-next]')?.addEventListener('click', () => open(current + 1));
+  document.querySelector('[data-lb-prev]')?.addEventListener('click', () => open(current - 1));
+  lb?.addEventListener('click', (e) => { if (e.target === lb) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (lb?.hasAttribute('hidden')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowRight') open(current + 1);
+    if (e.key === 'ArrowLeft') open(current - 1);
+  });
+</script>

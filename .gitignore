@@ -1,0 +1,29 @@
+# build output
+dist/
+.output/
+
+# dependencies
+node_modules/
+
+# astro
+.astro/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# environment
+.env
+.env.production
+
+# macOS / editors
+.DS_Store
+.vscode/
+*.local
+
+# local-only artifacts (not needed to build/deploy the site)
+screenshots/
+scrape/
+wrangler-*.log
+.wrangler/
