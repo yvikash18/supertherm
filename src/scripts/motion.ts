@@ -1,15 +1,14 @@
 // Site motion. Three kinds, each used for one job:
 //   1. Entrances: display type rises word by word, photos wipe open, blocks blur in.
 //   2. One pinned scroll scene on the home page (the "heat pass" statement).
-//   3. Responses to the pointer: machine-row photo preview, nav show/hide.
-// The hero heat line and the sizing tool carry their own scripts.
+//   3. Navigation: header show/hide, mobile menu, language menu.
+// The sizing tool carries its own script.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /* Entrances ------------------------------------------------------------- */
 function initEntrances() {
@@ -86,36 +85,28 @@ function initStatement() {
   });
 }
 
-/* Machine rows: a photo follows the pointer -------------------------------- */
-function initRowPreview() {
-  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-preview]'));
-  if (!rows.length || !finePointer || reduced) return;
+/* Language menu: sets the Google Translate cookie and reloads ------------- */
+function initLang() {
+  const selects = document.querySelectorAll<HTMLSelectElement>('[data-lang]');
+  if (!selects.length) return;
+  const match = document.cookie.match(/googtrans=\/[^/]*\/([^;]+)/);
+  const current = match ? decodeURIComponent(match[1]) : 'en';
+  const host = location.hostname;
+  const scopes = ['path=/', `path=/;domain=${host}`, `path=/;domain=.${host}`];
 
-  const box = document.createElement('div');
-  box.className = 'row-preview';
-  box.setAttribute('aria-hidden', 'true');
-  const img = document.createElement('img');
-  img.alt = '';
-  box.appendChild(img);
-  document.body.appendChild(box);
-  rows.forEach((r) => (new Image().src = r.dataset.preview!)); // warm the cache
-
-  const xTo = gsap.quickTo(box, 'x', { duration: 0.5, ease: 'power3.out' });
-  const yTo = gsap.quickTo(box, 'y', { duration: 0.5, ease: 'power3.out' });
-  rows.forEach((row) => {
-    row.addEventListener('pointerenter', (e) => {
-      img.src = row.dataset.preview!;
-      gsap.set(box, { x: e.clientX, y: e.clientY });
-      box.classList.add('is-on');
+  selects.forEach((sel) => {
+    if (Array.from(sel.options).some((o) => o.value === current)) sel.value = current;
+    sel.addEventListener('change', () => {
+      const lang = sel.value;
+      scopes.forEach((scope) => {
+        document.cookie =
+          lang === 'en'
+            ? `googtrans=;${scope};expires=Thu, 01 Jan 1970 00:00:00 GMT`
+            : `googtrans=/en/${lang};${scope}`;
+      });
+      location.reload();
     });
-    row.addEventListener('pointermove', (e) => {
-      xTo(e.clientX);
-      yTo(e.clientY);
-    });
-    row.addEventListener('pointerleave', () => box.classList.remove('is-on'));
   });
-  // Scrolling moves the row out from under a still pointer.
-  window.addEventListener('scroll', () => box.classList.remove('is-on'), { passive: true });
 }
 
 /* Header: solid after the first scroll, tucks away going down, returns going up */
@@ -159,7 +150,7 @@ function initMenu() {
 function boot() {
   initEntrances();
   initStatement();
-  initRowPreview();
+  initLang();
   initHeader();
   initMenu();
   // Web fonts change heading heights; re-measure the pinned scene once they land.

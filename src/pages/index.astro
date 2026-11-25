@@ -1,14 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Display from '../components/Display.astro';
-import HeatLine from '../components/HeatLine.astro';
 import Plate from '../components/Plate.astro';
-import Glyph from '../components/Glyph.astro';
 import SizingTool from '../components/SizingTool.astro';
 import Compare from '../components/Compare.astro';
-import ProcessAnim from '../components/ProcessAnim.astro';
 import Enquiry from '../components/Enquiry.astro';
-import { products, process, countries, clientLogos, branches, aboutImages, advantages, testimonials, divisions } from '../data/content';
+import { products, process, countries, clientLogos, branches, aboutImages, galleryImages, advantages, testimonials, divisions } from '../data/content';
 import { company } from '../data/content';
 import { si, tel } from '../lib/format';
 
@@ -16,6 +13,10 @@ const { noindex = false } = Astro.props;
 
 const statement =
   'An induction coil never touches the metal: the steel heats itself. No flame, no warm-up, every billet the same. More than 1000 Supertherm machines run across nine countries.';
+
+// Photos from the gallery shown on the home page: works floor, panels, exhibition stand.
+const shots = [2, 3, 5, 7, 10, 12].map((i) => galleryImages[i]).filter(Boolean);
+const worksPhoto = galleryImages[7]?.src ?? aboutImages.capability2;
 ---
 
 <Layout
@@ -24,26 +25,22 @@ const statement =
   title="Supertherm Corporations | Induction Forging, Hardening, Melting & Welding Machines"
   description="Supertherm Corporations is a leading manufacturer & supplier of induction heating equipment — induction forging machines, hardening systems, medium-frequency melting furnaces and high-frequency welders. 30+ years, 1000+ machines delivered across Asia & the Gulf."
 >
-  <!-- Hero: the line running -->
+  <!-- Hero: headline beside a machine on the works floor -->
   <section class="on-night hero">
-    <div class="wrap top">
-      <Display as="h1" text="Induction heating machines for forging, hardening, melting and welding." class="display-xl" onload delay={150} />
-      <div class="sub" data-in style="--i:8">
-        <p class="lede">Machines from 50 to 2000 kW, designed and built at our works in Bahadurgarh, Haryana for more than 30 years.</p>
-        <div class="acts">
-          <a href="#size" class="btn btn-solid">Find your machine</a>
-          <a href={`tel:${company.phoneRaw}`} class="btn btn-line num">Call {company.phone}</a>
+    <div class="wrap hero-grid">
+      <div class="top">
+        <Display as="h1" text="Induction heating machines for forging, hardening, melting and welding." class="display-xl" onload delay={150} />
+        <div class="sub" data-in style="--i:8">
+          <p class="lede">Machines from 50 to 2000 kW, designed and built at our works in Bahadurgarh, Haryana for more than 30 years.</p>
+          <div class="acts">
+            <a href="#machines" class="btn btn-solid">See our machines</a>
+            <a href={`tel:${company.phoneRaw}`} class="btn btn-line num">Call {company.phone}</a>
+          </div>
         </div>
       </div>
-    </div>
-    <HeatLine />
-  </section>
-
-  <!-- What induction is, in one pass -->
-  <section class="statement" data-statement>
-    <div class="wrap">
-      <p>{statement.split(' ').map((w) => (<><span class="sw">{w}</span>{' '}</>))}</p>
-      <div class="gauge" aria-hidden="true"><span></span></div>
+      <figure class="hero-shot" data-wipe>
+        <img class="photo" src={aboutImages.capability} alt="A Supertherm induction billet heater with its blue control cabinet" width="1200" height="900" fetchpriority="high" />
+      </figure>
     </div>
   </section>
 
@@ -56,15 +53,13 @@ const statement =
         <Display text="Our machines" />
         <p class="lede" data-in>Each one is engineered to the part: coil, power source, handling and controls come from the same works.</p>
       </div>
-      <ul class="rows machines">
+      <ul class="machines">
         {products.map((p, i) => (
           <li data-in style={`--i:${i}`}>
-            <a href={`/products#${p.slug}`} data-preview={p.image}>
-              <Glyph name={p.icon} class="glyph" />
-              <div class="name">
-                <h3 class="display display-sm">{p.name}</h3>
-                <p>{si(p.series)}</p>
-              </div>
+            <a href={`/products#${p.slug}`}>
+              <div class="shot"><img class="photo" src={p.image} alt={`Supertherm ${p.name.toLowerCase()} machine`} loading="lazy" width="470" height="320" /></div>
+              <h3 class="display display-sm">{p.name}</h3>
+              <p class="series">{si(p.series)}</p>
               <ul class="specs num">{p.specs.slice(0, 2).map((s) => <li>{si(s)}</li>)}</ul>
               <span class="go">Specifications</span>
             </a>
@@ -85,14 +80,26 @@ const statement =
     </div>
   </section>
 
-  <!-- The four processes, animated (stands in for the process video on the old site) -->
-  <section class="section">
+  <!-- What induction is, in one pass -->
+  <section class="statement" data-statement>
+    <div class="wrap">
+      <p>{statement.split(' ').map((w) => (<><span class="sw">{w}</span>{' '}</>))}</p>
+      <div class="gauge" aria-hidden="true"><span></span></div>
+    </div>
+  </section>
+
+  <!-- Photos of real machines -->
+  <section class="section built">
     <div class="wrap">
       <div class="head">
-        <Display text="How each process works" />
-        <p class="lede" data-in>What each machine does to the steel, drawn step by step. Pick a process. <a class="link" href="/products">Machine specifications</a></p>
+        <Display text="Machines we have built" />
+        <p class="lede" data-in>On the works floor in Bahadurgarh, at customer plants and on our exhibition stands. <a class="link" href="/gallery">All photos</a></p>
       </div>
-      <div data-in><ProcessAnim kinds={['hardening', 'forge', 'melt', 'weld']} /></div>
+      <ul class="shots">
+        {shots.map((g, i) => (
+          <li data-in style={`--i:${i % 3}`}><a href="/gallery" aria-label="Open the photo gallery"><img class="photo" src={g.src} alt="Supertherm induction heating equipment" loading="lazy" width="626" height="417" /></a></li>
+        ))}
+      </ul>
     </div>
   </section>
 
@@ -124,7 +131,7 @@ const statement =
     <div class="wrap">
       <div class="head two">
         <Display text="How we work" />
-        <div class="shot" data-wipe><img class="photo" src={aboutImages.capability} alt="A Supertherm billet heater with its control cabinet on the works floor" loading="lazy" width="1200" height="900" /></div>
+        <div class="shot" data-wipe><img class="photo" src={worksPhoto} alt="Supertherm equipment being assembled at the works" loading="lazy" width="626" height="417" /></div>
       </div>
       <ol class="steps">
         {process.map((s, i) => (
@@ -204,11 +211,16 @@ const statement =
 
 <style>
   /* Hero */
-  .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: space-between; padding-top: calc(var(--nav-h) + clamp(1.5rem, 4vh, 3.5rem)); padding-bottom: 1.25rem; overflow: hidden; }
-  .hero :global(h1) { font-size: clamp(2.25rem, min(5.4vw, 10vh), 5.25rem); max-width: 16em; }
-  .sub { display: grid; gap: 1.5rem; margin-top: clamp(1.5rem, 3vh, 2.5rem); margin-bottom: clamp(1rem, 2vh, 2rem); align-items: end; }
+  .hero { padding-top: calc(var(--nav-h) + clamp(1.5rem, 5vh, 4rem)); padding-bottom: clamp(2.5rem, 6vh, 5rem); overflow: hidden; }
+  .hero-grid { display: grid; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  .hero :global(h1) { font-size: clamp(2.25rem, min(4.6vw, 9vh), 4.5rem); max-width: 13em; }
+  .sub { display: grid; gap: 1.5rem; margin-top: clamp(1.5rem, 3vh, 2.5rem); }
   .acts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  @media (min-width: 900px) { .sub { grid-template-columns: minmax(0, 34rem) auto; justify-content: space-between; } }
+  .hero-shot { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 3px; background: var(--night-2); }
+  @media (min-width: 1000px) {
+    .hero { min-height: min(100svh, 54rem); display: flex; align-items: center; }
+    .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  }
   @media (max-width: 520px) { .acts .btn { width: 100%; } }
 
   /* Statement */
@@ -229,20 +241,30 @@ const statement =
     .stick { position: sticky; top: calc(var(--nav-h) + 2rem); margin-bottom: 0; justify-items: start; }
   }
 
-  /* Machine rows */
-  .machines a { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.75rem 1.25rem; align-items: center; padding-block: 1.5rem; transition: background-color 0.2s, padding 0.35s var(--ease); }
-  .machines :global(.glyph) { width: 5.5rem; height: auto; }
-  .name p { color: var(--fg-2); margin-top: 0.4rem; }
-  .specs { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; font-weight: 600; }
-  .go { display: none; }
-  @media (min-width: 1024px) {
-    .machines a { grid-template-columns: 10rem 1.5fr 1fr auto; gap: 2.5rem; padding-block: 2rem; }
-    .machines :global(.glyph) { width: 10rem; }
-    .specs { grid-column: auto; flex-direction: column; }
-    .go { display: block; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
-    .machines a:hover { background: var(--plate); padding-inline: 1.5rem; }
-    .machines a:hover .go { text-decoration-thickness: 2px; }
+  /* Machine cards */
+  .machines { display: grid; gap: 2.5rem 1.5rem; }
+  .machines a { display: flex; flex-direction: column; height: 100%; }
+  .machines .shot { aspect-ratio: 47 / 32; overflow: hidden; border-radius: 3px; margin-bottom: 1.1rem; }
+  .machines .photo { transition: transform 0.6s var(--ease); }
+  .machines a:hover .photo { transform: scale(1.04); }
+  .series { color: var(--fg-2); margin-top: 0.5rem; }
+  .specs { display: flex; flex-direction: column; gap: 0.2rem; font-weight: 600; margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+  .go { margin-top: auto; padding-top: 1rem; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+  .machines a:hover .go { text-decoration-thickness: 2px; }
+  @media (min-width: 620px) { .machines { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1100px) {
+    .machines { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2rem; }
+    /* Names and series run to one or two lines; hold both so the cards line up */
+    .machines h3 { min-height: 2em; }
+    .series { min-height: 3.1em; }
   }
+
+  /* Photo strip */
+  .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .shots a { display: block; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 3px; }
+  .shots .photo { transition: transform 0.6s var(--ease); }
+  .shots a:hover .photo { transform: scale(1.04); }
+  @media (min-width: 900px) { .shots { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; } }
 
   /* Division lists */
   .range { padding-top: 0; }

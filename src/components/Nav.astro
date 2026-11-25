@@ -7,6 +7,13 @@ const { overDark = false } = Astro.props;
 const path = Astro.url.pathname;
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
+
+// Machine translation through Google Translate, each language under its own name.
+const langs: [string, string][] = [
+  ['en', 'English'], ['pa', 'ਪੰਜਾਬੀ'], ['gu', 'ગુજરાતી'], ['mr', 'मराठी'], ['ta', 'தமிழ்'], ['te', 'తెలుగు'],
+  ['bn', 'বাংলা'], ['ne', 'नेपाली'], ['ar', 'العربية'], ['fa', 'فارسی'], ['ms', 'Melayu'], ['vi', 'Tiếng Việt'],
+  ['zh-CN', '中文'], ['fr', 'Français'], ['es', 'Español'], ['de', 'Deutsch'], ['ru', 'Русский'],
+];
 ---
 
 <header data-header class:list={['hdr', overDark && 'over-dark']}>
@@ -20,6 +27,9 @@ const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
     </nav>
 
     <div class="right">
+      <select data-lang class="lang notranslate" translate="no" aria-label="Language">
+        {langs.map(([code, label]) => <option value={code}>{label}</option>)}
+      </select>
       <a href="/contact" class="btn btn-solid btn-sm">Enquire</a>
       <button data-nav-toggle class="burger" aria-label="Menu" aria-expanded="false" aria-controls="nav-panel">
         <span></span><span></span>
@@ -36,7 +46,9 @@ const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
   </nav>
   <div class="foot">
     <a href={`tel:${company.phoneRaw}`} class="num">{company.phone}</a>
-    <a href="/contact">Enquire</a>
+    <select data-lang class="lang notranslate" translate="no" aria-label="Language">
+      {langs.map(([code, label]) => <option value={code}>{label}</option>)}
+    </select>
   </div>
 </div>
 
@@ -61,6 +73,13 @@ const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
   .links a:hover { border-bottom-color: currentColor; }
   .links a[aria-current] { border-bottom-color: var(--h900); }
   .right { display: flex; align-items: center; gap: 1rem; }
+  .lang {
+    appearance: none; font: inherit; font-size: 0.9375rem; font-weight: 550; color: var(--fg); cursor: pointer;
+    min-height: 2.5rem; max-width: 9rem; padding: 0.4rem 1.9rem 0.4rem 0.8rem; border: 1px solid var(--fg-3); border-radius: 3px;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%238794a0' stroke-width='1.8'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 0.7rem center / 0.65rem;
+  }
+  .lang:hover { border-color: var(--fg); }
+  .right .lang { display: none; }
   .burger { display: grid; gap: 7px; width: 2.75rem; height: 2.75rem; place-content: center; color: var(--fg); }
   .burger span { display: block; width: 1.5rem; height: 2px; background: currentColor; transition: transform 0.3s var(--ease); }
   :global(.burger.is-open) span:first-child { transform: translateY(4.5px) rotate(45deg); }
@@ -83,5 +102,6 @@ const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
   @media (min-width: 1024px) {
     .links { display: flex; }
     .burger { display: none; }
+    .right .lang { display: block; }
   }
 </style>
