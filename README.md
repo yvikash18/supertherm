@@ -60,14 +60,11 @@ The console's backend runs on Cloudflare with the site: Pages Functions in `func
 uploads. Setup and day-to-day use are in **`docs/CMS-SETUP.md`**. Once a section has been
 saved and published from the console, the console's copy wins over `site.ts` for that section.
 
-## To do before launch
+## Deploying
 
-- Replace placeholder **gallery tiles** with real project photos in `public/gallery/`.
-- Swap the **client name badges** for real logos if available (`clients` array / logo wall).
-- Confirm phone/email/address in `site.ts` and wire the **contact form** to a real
-  endpoint (currently opens the visitor's mail client via `mailto:`).
-- Add real **social links** in `site.ts` (`company.social`).
-- Consider a proper OG share image at `public/og.jpg` and reference it in `Layout.astro`.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site and deploys it
+to Cloudflare Pages. The content console at `/admin` starts the same workflow when you
+press Publish. Setup is in `docs/CMS-SETUP.md`.
 
 ## Accessibility & performance notes
 

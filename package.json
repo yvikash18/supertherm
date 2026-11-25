@@ -21,7 +21,6 @@
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
-    "playwright": "^1.49.1",
     "wrangler": "^4.168.0"
   }
 }
