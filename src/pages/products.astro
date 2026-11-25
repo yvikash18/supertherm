@@ -2,8 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import Glyph from '../components/Glyph.astro';
-import ProcessAnim from '../components/ProcessAnim.astro';
-import type { Kind } from '../lib/process-copy';
 import Enquiry from '../components/Enquiry.astro';
 import Display from '../components/Display.astro';
 import { products, divisions } from '../data/content';
@@ -110,8 +108,6 @@ const schema = {
             <a class="btn btn-solid" href={`/contact?interest=${encodeURIComponent(p.name)}`}>Enquire about this machine</a>
           </header>
 
-          <div class="stage" data-in><ProcessAnim kinds={[p.icon as Kind]} /></div>
-
           <ul class="figs num">
             {p.specs.map((x, i) => <li data-in style={`--i:${i}`}>{si(x)}</li>)}
           </ul>
@@ -213,7 +209,7 @@ const schema = {
   .machine + .machine { border-top: 1px solid var(--line); }
   .mhead { display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; justify-content: space-between; align-items: flex-end; margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
   .series { margin-top: 0.75rem; font-weight: 650; font-stretch: 88%; font-size: clamp(1.1rem, 1.6vw, 1.35rem); color: var(--cab-deep); }
-  .figs { display: grid; grid-template-columns: 1fr 1fr; margin-top: 1.5rem; }
+  .figs { display: grid; grid-template-columns: 1fr 1fr; }
   .figs li { border-top: 2px solid var(--fg); padding: 0.8rem 1rem 0.8rem 0; font-weight: 700; font-stretch: 84%; font-size: clamp(1.05rem, 1.7vw, 1.5rem); line-height: 1.15; }
   .cols { display: grid; gap: clamp(2rem, 5vw, 5rem); margin-top: clamp(2rem, 5vw, 4rem); }
   .about { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }

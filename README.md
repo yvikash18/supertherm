@@ -34,7 +34,6 @@ src/
   data/content.ts         # what pages import: published console content, else site.ts
   data/cms-sections.ts    # how site.ts exports are grouped into console sections
   admin/                  # /admin console: generated forms, sign-in, save, publish
-  lib/heat.ts             # colour of steel at temperature, used by the process animations
   layouts/Layout.astro    # <head>, SEO, nav, footer
   scripts/motion.ts       # entrances, pinned statement, row preview, nav
   components/
