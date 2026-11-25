@@ -66,10 +66,10 @@ export const company = {
   ...defaults.company,
   ...c,
   address: { ...defaults.company.address, ...c.address },
-  social: { ...defaults.company.social, ...c.social },
 };
 
 export const nav = pick('nav');
+export const socialLinks = pick('socialLinks');
 export const stats = pick('stats');
 export const products = pick('products');
 export const capabilities = pick('capabilities');

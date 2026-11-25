@@ -1,14 +1,10 @@
 ---
-import { nav, products } from '../data/content';
+import { nav, products, socialLinks } from '../data/content';
 import { company } from '../data/content';
 import Logo from './Logo.astro';
 const year = new Date().getFullYear();
-const social = [
-  ['Facebook', company.social.facebook],
-  ['Twitter', company.social.twitter],
-  ['LinkedIn', company.social.linkedin],
-  ['YouTube', company.social.youtube],
-];
+// Only links that have both a name and an address are shown
+const social = socialLinks.filter((s) => s.label?.trim() && s.url?.trim());
 ---
 
 <footer class="on-night ft">
@@ -36,7 +32,7 @@ const social = [
   </div>
   <div class="wrap base">
     <p>© {year} {company.name}. {company.tagline}.</p>
-    <ul>{social.map(([l, h]) => <li><a href={h} target="_blank" rel="noopener noreferrer">{l}</a></li>)}</ul>
+    {social.length > 0 && <ul>{social.map((s) => <li><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a></li>)}</ul>}
   </div>
 </footer>
 

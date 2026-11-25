@@ -19,13 +19,16 @@ export const company = {
     line2: 'Bahadurgarh, Haryana 124507',
     country: 'India',
   },
-  social: {
-    facebook: 'https://facebook.com/',
-    twitter: 'https://twitter.com/',
-    linkedin: 'https://www.linkedin.com/company/supertherm-corporations-bahadhurgarh/',
-    youtube: 'https://youtube.com/channel/UCdn_1NjWcb1Pb01WV25j7fA',
-  },
 };
+
+// Social links shown in the footer, in this order. Add, remove or reorder freely;
+// a link with an empty address is not shown.
+export const socialLinks = [
+  { label: 'Facebook', url: 'https://facebook.com/' },
+  { label: 'Twitter', url: 'https://twitter.com/' },
+  { label: 'LinkedIn', url: 'https://www.linkedin.com/company/supertherm-corporations-bahadhurgarh/' },
+  { label: 'YouTube', url: 'https://youtube.com/channel/UCdn_1NjWcb1Pb01WV25j7fA' },
+];
 
 export const nav = [
   { label: 'Home', href: '/' },

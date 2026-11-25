@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { company } from '../data/content';
+import { company, socialLinks } from '../data/content';
 
 interface Props {
   title?: string;
@@ -50,7 +50,7 @@ const orgSchema = {
   },
   areaServed: ['India', 'Oman', 'Saudi Arabia', 'Iran', 'Nepal', 'Bhutan', 'Bangladesh', 'Malaysia', 'Vietnam'],
   knowsAbout: ['Induction forging', 'Induction hardening', 'Induction melting', 'High frequency welding'],
-  sameAs: [company.social.linkedin, company.social.youtube, company.social.facebook, company.social.twitter],
+  sameAs: socialLinks.map((s) => s.url).filter(Boolean),
 };
 ---
 

@@ -16,7 +16,7 @@ export const SECTIONS: CmsSection[] = [
     slug: 'global',
     label: 'Company & contact',
     blurb: 'Company name, phone numbers, email, address, social links, registration and bank details and the main menu.',
-    keys: ['company', 'companyDetails', 'bankDetails', 'nav'],
+    keys: ['company', 'socialLinks', 'companyDetails', 'bankDetails', 'nav'],
   },
   {
     slug: 'home',
