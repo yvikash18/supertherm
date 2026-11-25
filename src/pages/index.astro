@@ -3,7 +3,6 @@ import Layout from '../layouts/Layout.astro';
 import Display from '../components/Display.astro';
 import HeroSlides from '../components/HeroSlides.astro';
 import Plate from '../components/Plate.astro';
-import SizingTool from '../components/SizingTool.astro';
 import Compare from '../components/Compare.astro';
 import Enquiry from '../components/Enquiry.astro';
 import { products, process, countries, clientLogos, branches, aboutImages, galleryImages, advantages, testimonials, divisions } from '../data/content';
@@ -99,17 +98,6 @@ const worksPhoto = galleryImages[7]?.src ?? aboutImages.capability2;
           <li data-in style={`--i:${i % 3}`}><a href="/gallery" aria-label="Open the photo gallery"><img class="photo" src={g.src} alt="Supertherm induction heating equipment" loading="lazy" width="626" height="417" /></a></li>
         ))}
       </ul>
-    </div>
-  </section>
-
-  <!-- Sizing tool -->
-  <section class="section size" id="size">
-    <div class="wrap">
-      <div class="head">
-        <Display text="Choose by bar size" />
-        <p class="lede" data-in>Frequency decides how deep the current heats. Thin bar needs high frequency, heavy billet needs low. Drag to your diameter.</p>
-      </div>
-      <div data-in><SizingTool /></div>
     </div>
   </section>
 
@@ -272,9 +260,6 @@ const worksPhoto = galleryImages[7]?.src ?? aboutImages.capability2;
   .divs li { padding-block: 0.35rem; break-inside: avoid; color: var(--fg-2); }
   @media (min-width: 900px) { .divs { grid-template-columns: 1fr 1fr; gap: 5rem; } }
   @media (max-width: 480px) { .divs ul { columns: 1; } }
-
-  /* Sizing */
-  .size { background: var(--plate); border-block: 1px solid var(--line); }
 
   /* Steps */
   .head.two .shot { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 3px; max-width: 34rem; justify-self: end; width: 100%; }

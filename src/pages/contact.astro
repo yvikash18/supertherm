@@ -84,7 +84,7 @@ const waNumber = company.phoneRaw.replace(/[^0-9]/g, '');
   const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
   const note = document.querySelector<HTMLElement>('[data-form-note]');
 
-  // Arriving from a machine page or the sizing tool: carry the choice into the form.
+  // Arriving from a machine page: carry the choice into the form.
   const q = new URLSearchParams(location.search);
   const interest = form?.querySelector<HTMLSelectElement>('#interest');
   const message = form?.querySelector<HTMLTextAreaElement>('#message');

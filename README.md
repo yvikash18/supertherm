@@ -14,7 +14,7 @@ the machines themselves; the heat colours appear only where metal is hot. One ty
 | Framework | [Astro 4](https://astro.build), static output |
 | Styling | Design tokens and components in `src/styles/global.css`, scoped component CSS, Tailwind 3 utilities |
 | Motion | CSS transitions driven by `IntersectionObserver`; [GSAP ScrollTrigger](https://gsap.com) for the one pinned scene and the pointer-follow preview |
-| Hero | Canvas 2D drawing of a billet heater (`src/components/HeatLine.astro`), no WebGL |
+| Hero | Photo slideshow built with Motion (`src/components/HeroSlides.astro`) |
 | Type | Archivo variable (width and weight axes) from Google Fonts |
 
 ## Commands
@@ -34,12 +34,11 @@ src/
   data/content.ts         # what pages import: published console content, else site.ts
   data/cms-sections.ts    # how site.ts exports are grouped into console sections
   admin/                  # /admin console: generated forms, sign-in, save, publish
-  lib/heat.ts             # colour of steel at temperature, shared by hero and sizing tool
+  lib/heat.ts             # colour of steel at temperature, used by the process animations
   layouts/Layout.astro    # <head>, SEO, nav, footer
   scripts/motion.ts       # entrances, pinned statement, row preview, nav
   components/
-    HeatLine.astro        # hero: bars passing through an induction coil
-    SizingTool.astro      # bar diameter -> frequency band and machine series
+    HeroSlides.astro      # hero: slideshow of machine photos
     Compare.astro         # induction against oil- and gas-fired furnaces
     Glyph.astro           # process diagrams for the four machine families
     Display.astro         # display headline with word-by-word rise

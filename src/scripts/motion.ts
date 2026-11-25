@@ -2,7 +2,6 @@
 //   1. Entrances: display type rises word by word, photos wipe open, blocks blur in.
 //   2. One pinned scroll scene on the home page (the "heat pass" statement).
 //   3. Navigation: header show/hide, mobile menu, language menu.
-// The sizing tool carries its own script.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
