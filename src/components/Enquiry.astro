@@ -4,8 +4,8 @@ import { company } from '../data/content';
 import Display from './Display.astro';
 interface Props { title?: string; text?: string }
 const {
-  title = 'Send us your part drawing.',
-  text = 'Tell us the part, the material and the output you need per hour. An engineer replies with a machine size and a quote.',
+  title = 'Get a quote for your machine',
+  text = 'Send your part drawing, or just tell us the part, the material and the output you need per hour. An engineer replies with the right machine size and a quote.',
 } = Astro.props;
 const wa = company.phoneRaw.replace(/[^0-9]/g, '');
 ---
@@ -16,7 +16,7 @@ const wa = company.phoneRaw.replace(/[^0-9]/g, '');
     <div class="cols">
       <p class="lede">{text}</p>
       <div class="acts">
-        <a href="/contact" class="btn btn-solid">Write an enquiry</a>
+        <a href="/contact" class="btn btn-solid">Send an enquiry</a>
         <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" class="btn btn-line">Message on WhatsApp</a>
         <a href={`tel:${company.phoneRaw}`} class="btn btn-line num">Call {company.phone}</a>
       </div>

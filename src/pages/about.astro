@@ -43,7 +43,7 @@ const glance = [
 
   <section class="section">
     <div class="wrap">
-      <Display text="Five disciplines, one works" />
+      <Display text="In-house R&D team" />
       <ul class="disc">
         {disciplines.map((d, i) => <li class="display display-sm" data-in style={`--i:${i}`}>{d}</li>)}
       </ul>
@@ -61,7 +61,7 @@ const glance = [
   <section class="section">
     <div class="wrap split">
       <div class="stick">
-        <Display text="Built into every machine" />
+        <Display text="Product features" />
       </div>
       <ul class="rows feats">
         {productFeatures.map((f, i) => <li data-in style={`--i:${i % 6}`}>{f}</li>)}
@@ -71,7 +71,7 @@ const glance = [
 
   <section class="section alt">
     <div class="wrap">
-      <Display text="Induction against oil and gas" />
+      <Display text="Induction vs oil and gas furnaces" />
       <p class="lede lead" data-in>An induction billet heater compared with fuel-fired furnaces on the measures a forge shop tracks.</p>
       <div class="table-scroll" data-in>
         <table class="spec-table">

@@ -27,7 +27,7 @@ const statement =
   <!-- Hero: the line running -->
   <section class="on-night hero">
     <div class="wrap top">
-      <Display as="h1" text="Induction heat for forging, hardening, melting and welding." class="display-xl" onload delay={150} />
+      <Display as="h1" text="Induction heating machines for forging, hardening, melting and welding." class="display-xl" onload delay={150} />
       <div class="sub" data-in style="--i:8">
         <p class="lede">Machines from 50 to 2000 kW, designed and built at our works in Bahadurgarh, Haryana for more than 30 years.</p>
         <div class="acts">
@@ -53,7 +53,7 @@ const statement =
   <section class="section" id="machines">
     <div class="wrap">
       <div class="head">
-        <Display text="Four machine families" />
+        <Display text="Our machines" />
         <p class="lede" data-in>Each one is engineered to the part: coil, power source, handling and controls come from the same works.</p>
       </div>
       <ul class="rows machines">
@@ -89,7 +89,7 @@ const statement =
   <section class="section">
     <div class="wrap">
       <div class="head">
-        <Display text="The work, as it happens" />
+        <Display text="How each process works" />
         <p class="lede" data-in>What each machine does to the steel, drawn step by step. Pick a process. <a class="link" href="/products">Machine specifications</a></p>
       </div>
       <div data-in><ProcessAnim kinds={['hardening', 'forge', 'melt', 'weld']} /></div>
@@ -100,7 +100,7 @@ const statement =
   <section class="section size" id="size">
     <div class="wrap">
       <div class="head">
-        <Display text="Size it by the bar" />
+        <Display text="Choose by bar size" />
         <p class="lede" data-in>Frequency decides how deep the current heats. Thin bar needs high frequency, heavy billet needs low. Drag to your diameter.</p>
       </div>
       <div data-in><SizingTool /></div>
@@ -111,7 +111,7 @@ const statement =
   <section class="section">
     <div class="wrap split">
       <div class="head stick">
-        <Display text="Against oil and gas" />
+        <Display text="Induction vs oil and gas furnaces" />
         <p class="lede" data-in>What changes when a forge shop replaces a fuel-fired furnace with an induction billet heater.</p>
         <p class="note" data-in>Supertherm figures for billet heating, with electricity at ₹7 per unit.</p>
       </div>
@@ -123,7 +123,7 @@ const statement =
   <section class="section works">
     <div class="wrap">
       <div class="head two">
-        <Display text="From drawing to running line" />
+        <Display text="How we work" />
         <div class="shot" data-wipe><img class="photo" src={aboutImages.capability} alt="A Supertherm billet heater with its control cabinet on the works floor" loading="lazy" width="1200" height="900" /></div>
       </div>
       <ol class="steps">
@@ -153,7 +153,7 @@ const statement =
   <section class="section clients">
     <div class="wrap">
       <div class="head">
-        <Display text="Running in these plants" />
+        <Display text="Our clients" />
         <p class="lede" data-in>Forging shops, gear makers and two-wheeler plants that heat with Supertherm machines. <a class="link" href="/clients">All clients</a></p>
       </div>
       <ul class="logos">
@@ -183,7 +183,7 @@ const statement =
   <section class="section net">
     <div class="wrap split">
       <div class="head stick">
-        <Display text="Service within reach" />
+        <Display text="Branches and service" />
         <p class="lede" data-in>Seven offices across India and a service line that answers day and night. Machines delivered to {countries.slice(1, -1).join(', ')} and {countries[countries.length - 1]}.</p>
         <a class="btn btn-line" href="/branches" data-in>Addresses and contacts</a>
       </div>
@@ -205,7 +205,7 @@ const statement =
 <style>
   /* Hero */
   .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: space-between; padding-top: calc(var(--nav-h) + clamp(1.5rem, 4vh, 3.5rem)); padding-bottom: 1.25rem; overflow: hidden; }
-  .hero :global(h1) { font-size: clamp(2.9rem, min(9.4vw, 15.5vh), 11rem); }
+  .hero :global(h1) { font-size: clamp(2.5rem, min(7.4vw, 13vh), 8.5rem); }
   .sub { display: grid; gap: 1.5rem; margin-top: clamp(1.5rem, 3vh, 2.5rem); margin-bottom: clamp(1rem, 2vh, 2rem); align-items: end; }
   .acts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
   @media (min-width: 900px) { .sub { grid-template-columns: minmax(0, 34rem) auto; justify-content: space-between; } }

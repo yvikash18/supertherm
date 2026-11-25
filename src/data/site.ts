@@ -657,31 +657,31 @@ export const testimonials = [
 // `{name}` is replaced with the company name.
 export const pageHeadings = {
   about: {
-    title: 'Three decades of induction',
+    title: 'About Supertherm',
     subtitle:
       'For more than 30 years, {name} has designed and built induction systems that heat, harden, melt and weld metal for manufacturers across Asia and the Gulf.',
   },
   products: {
-    title: 'Machines',
+    title: 'Our products',
     subtitle:
       'Four families of induction equipment. Ratings, frequencies and features for each are below; every machine is then sized to your part.',
   },
   gallery: {
-    title: 'On the floor',
+    title: 'Gallery',
     subtitle: 'Machines at the works, at customer plants and on our exhibition stands. Select a photo to enlarge it.',
   },
   branches: {
-    title: 'Close to your shop floor',
+    title: 'Branches and offices',
     subtitle:
       'Head office and works in Haryana, six regional offices across India, and machines in service in nine countries.',
   },
   clients: {
-    title: 'Who runs our machines',
+    title: 'Our clients',
     subtitle:
       'Automotive forging groups, gear and bearing makers, tube mills and independent foundries heat with Supertherm induction systems.',
   },
   contact: {
-    title: 'Tell us what you heat',
+    title: 'Contact us',
     subtitle:
       'Describe the part and the process. An engineer replies with the machine that fits, usually within one working day. We design, build and test every machine at our own works, which is how we keep quality and price under control.',
   },

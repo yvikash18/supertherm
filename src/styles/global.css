@@ -118,13 +118,13 @@
     font-stretch: 68%;
     font-weight: 800;
     text-transform: uppercase;
-    line-height: 0.9;
+    line-height: 0.95;
     letter-spacing: -0.012em;
-    font-size: clamp(2.75rem, 8.2vw, 7.25rem);
+    font-size: clamp(2rem, 4.4vw, 4rem);
     text-wrap: balance;
   }
-  .display-xl { font-size: clamp(3.1rem, 11.6vw, 11.5rem); line-height: 0.86; }
-  .display-sm { font-size: clamp(2rem, 4.6vw, 3.75rem); line-height: 0.94; }
+  .display-xl { font-size: clamp(2.6rem, 7vw, 6.25rem); line-height: 0.9; }
+  .display-sm { font-size: clamp(1.5rem, 2.6vw, 2.4rem); line-height: 1; }
 
   .lede {
     font-size: clamp(1.1rem, 1.5vw, 1.3rem);
