@@ -93,6 +93,7 @@ export const countries = pick('countries');
 export const clientSectors = pick('clientSectors');
 export const clients = pick('clients');
 export const heroBanners = pick('heroBanners');
+export const heroPhotos = pick('heroPhotos');
 export const aboutImages = pick('aboutImages');
 export const galleryImages = pick('galleryImages');
 export const clientLogos = pick('clientLogos');

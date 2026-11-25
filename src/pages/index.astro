@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Display from '../components/Display.astro';
+import HeroSlides from '../components/HeroSlides.astro';
 import Plate from '../components/Plate.astro';
 import SizingTool from '../components/SizingTool.astro';
 import Compare from '../components/Compare.astro';
@@ -38,9 +39,7 @@ const worksPhoto = galleryImages[7]?.src ?? aboutImages.capability2;
           </div>
         </div>
       </div>
-      <figure class="hero-shot" data-wipe>
-        <img class="photo" src={aboutImages.capability} alt="A Supertherm induction billet heater with its blue control cabinet" width="1200" height="900" fetchpriority="high" />
-      </figure>
+      <HeroSlides />
     </div>
   </section>
 
@@ -216,7 +215,6 @@ const worksPhoto = galleryImages[7]?.src ?? aboutImages.capability2;
   .hero :global(h1) { font-size: clamp(2.25rem, min(4.6vw, 9vh), 4.5rem); max-width: 13em; }
   .sub { display: grid; gap: 1.5rem; margin-top: clamp(1.5rem, 3vh, 2.5rem); }
   .acts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  .hero-shot { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 3px; background: var(--night-2); }
   @media (min-width: 1000px) {
     .hero { min-height: min(100svh, 54rem); display: flex; align-items: center; }
     .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }

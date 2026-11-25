@@ -27,6 +27,7 @@ export const BLOCK_LABELS: Record<string, string> = {
   clientLogos: 'Client logos',
   aboutImages: 'About page photos',
   heroBanners: 'Banner photos',
+  heroPhotos: 'Home page slideshow photos',
   pageHeadings: 'Headings',
 };
 
@@ -103,6 +104,7 @@ export const IMAGE_PATHS = new Set([
   'products.*.image',
   'products.*.image2',
   'heroBanners.*',
+  'heroPhotos.*',
   'clientLogos.*',
   'aboutImages.*',
   'galleryImages.*.src',
@@ -140,6 +142,7 @@ export const ITEM_NAMES: Record<string, string> = {
   galleryImages: 'photo',
   clientLogos: 'logo',
   heroBanners: 'photo',
+  heroPhotos: 'photo',
   specGroups: 'table',
   extra: 'list',
   phones: 'phone number',

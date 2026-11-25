@@ -52,7 +52,7 @@ export const SECTIONS: CmsSection[] = [
     slug: 'media',
     label: 'Gallery & images',
     blurb: 'Gallery photos, client logos and the photos used on the about and home pages.',
-    keys: ['galleryImages', 'clientLogos', 'aboutImages', 'heroBanners'],
+    keys: ['heroPhotos', 'galleryImages', 'clientLogos', 'aboutImages', 'heroBanners'],
   },
   {
     slug: 'headings',

@@ -613,6 +613,15 @@ export const heroBanners = [
   '/assets/banner-4.jpg',
 ];
 
+// Photos in the home page slideshow, in order. The first one is shown on load.
+export const heroPhotos = [
+  '/assets/what-we.jpg',
+  '/assets/g9.jpg',
+  '/assets/g1.jpg',
+  '/assets/g6.jpg',
+  '/assets/g14.jpg',
+];
+
 export const aboutImages = {
   primary: '/assets/about-1.jpg',
   secondary: '/assets/about-2.jpg',

@@ -1,0 +1,150 @@
+---
+// Home page slideshow: real photos of machines, changing every few seconds.
+// Without scripts the first photo simply stays. Movement is built with Motion.
+import { heroPhotos, aboutImages } from '../data/content';
+const photos: string[] = (heroPhotos?.length ? heroPhotos : [aboutImages.capability]).filter(Boolean);
+---
+
+<div class="slides" data-slides>
+  <figure class="frame" data-wipe>
+    <div class="stack">
+      {photos.map((src, i) => (
+        <img
+          class="photo"
+          data-slide
+          src={src}
+          alt={`Supertherm induction heating machine, photo ${i + 1} of ${photos.length}`}
+          width="1200"
+          height="900"
+          loading={i === 0 ? 'eager' : 'lazy'}
+          fetchpriority={i === 0 ? 'high' : undefined}
+          draggable="false"
+        />
+      ))}
+    </div>
+  </figure>
+  {photos.length > 1 && (
+    <div class="ctl">
+      <span class="count num" aria-live="off"><span data-now>1</span> / {photos.length}</span>
+      <span class="bar" aria-hidden="true"><span data-bar></span></span>
+      <button type="button" data-prev aria-label="Previous photo">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 2.5 4.5 8l5.5 5.5" /></svg>
+      </button>
+      <button type="button" data-next aria-label="Next photo">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2.5 11.5 8 6 13.5" /></svg>
+      </button>
+    </div>
+  )}
+</div>
+
+<style>
+  .frame { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 3px; background: var(--night-2); touch-action: pan-y; }
+  .stack { position: relative; width: 100%; height: 100%; }
+  .stack img { position: absolute; inset: 0; user-select: none; }
+  .stack img:not(:first-child) { opacity: 0; }
+  .ctl { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.9rem; }
+  .count { font-size: 0.9375rem; font-weight: 600; color: var(--fg-2); min-width: 3.2em; }
+  .bar { flex: 1; height: 2px; background: var(--line); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--h1100); transform-origin: left; transform: scaleX(0); }
+  button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--fg-3); border-radius: 3px; color: var(--fg); cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+  button:hover { border-color: var(--fg); background: color-mix(in srgb, var(--fg) 10%, transparent); }
+</style>
+
+<script>
+  import { animate, inView, press } from 'motion';
+
+  const root = document.querySelector<HTMLElement>('[data-slides]');
+  const slides = Array.from(root?.querySelectorAll<HTMLElement>('[data-slide]') ?? []);
+
+  if (root && slides.length > 1) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const frame = root.querySelector<HTMLElement>('.frame')!;
+    const bar = root.querySelector<HTMLElement>('[data-bar]')!;
+    const now = root.querySelector<HTMLElement>('[data-now]')!;
+    const HOLD = 5; // seconds each photo stays
+    const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+    let index = 0;
+    let busy = false;
+    let visible = false;
+    let held = false; // pointer or keyboard focus is on the slideshow
+    let timer: ReturnType<typeof animate> | null = null;
+    let run = 0;
+
+    const stopTimer = () => { run++; timer?.stop(); timer = null; };
+    const startTimer = () => {
+      stopTimer();
+      if (reduced || !visible || held) { bar.style.transform = 'scaleX(0)'; return; }
+      const mine = run;
+      timer = animate(bar, { scaleX: [0, 1] }, { duration: HOLD, ease: 'linear' });
+      timer.then(() => { if (mine === run) go(index + 1, 1); });
+    };
+
+    async function go(to: number, dir: 1 | -1) {
+      if (busy) return;
+      const next = (to + slides.length) % slides.length;
+      if (next === index) return;
+      busy = true;
+      stopTimer();
+      const from = slides[index], into = slides[next];
+      index = next;
+      now.textContent = String(next + 1);
+
+      if (reduced) {
+        from.style.opacity = '0';
+        into.style.opacity = '1';
+      } else {
+        from.style.zIndex = '1';
+        into.style.zIndex = '2';
+        into.style.opacity = '1';
+        // The new photo opens across the old one from the side it is travelling from,
+        // settling from a slight zoom; the old photo drifts the other way underneath.
+        const closed = dir > 0 ? 'inset(0% 0% 0% 100%)' : 'inset(0% 100% 0% 0%)';
+        animate(from, { x: ['0%', `${dir * -6}%`], scale: [1, 1.04] }, { duration: 1, ease: EASE });
+        await animate(into, { clipPath: [closed, 'inset(0% 0% 0% 0%)'], scale: [1.14, 1] }, { duration: 1, ease: EASE });
+        from.style.opacity = '0';
+        from.style.transform = '';
+        from.style.zIndex = '';
+        into.style.clipPath = '';
+      }
+      busy = false;
+      startTimer();
+    }
+
+    root.querySelector('[data-next]')?.addEventListener('click', () => go(index + 1, 1));
+    root.querySelector('[data-prev]')?.addEventListener('click', () => go(index - 1, -1));
+
+    // Buttons give under the finger and spring back.
+    if (!reduced) {
+      press(root.querySelectorAll('button'), (el) => {
+        animate(el, { scale: 0.9 }, { type: 'spring', stiffness: 600, damping: 30 });
+        return () => { animate(el, { scale: 1 }, { type: 'spring', stiffness: 400, damping: 14 }); };
+      });
+    }
+
+    // Swipe on touch screens.
+    let downX: number | null = null;
+    frame.addEventListener('pointerdown', (e) => { downX = e.clientX; });
+    frame.addEventListener('pointerup', (e) => {
+      if (downX === null) return;
+      const dx = e.clientX - downX;
+      downX = null;
+      if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+    });
+    frame.addEventListener('pointercancel', () => { downX = null; });
+
+    // Hold while someone is pointing at it or tabbing through it; run only while on screen.
+    const hold = (v: boolean) => { held = v; if (!busy) startTimer(); };
+    if (window.matchMedia('(hover: hover)').matches) {
+      root.addEventListener('pointerenter', () => hold(true));
+      root.addEventListener('pointerleave', () => hold(false));
+    }
+    root.addEventListener('focusin', () => hold(true));
+    root.addEventListener('focusout', () => hold(false));
+    inView(root, () => {
+      visible = true;
+      if (!busy) startTimer();
+      return () => { visible = false; stopTimer(); };
+    }, { amount: 0.3 });
+  }
+</script>
