@@ -1,0 +1,41 @@
+# Builds the site and deploys it to Cloudflare Pages.
+# Runs on every push to main, when started by hand, and when the content
+# console's Publish button asks for a rebuild (repository_dispatch).
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [cms-publish]
+
+# A newer run replaces one still waiting, so two publishes in a row deploy once.
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build (reads published content from the console)
+        run: npm run build
+        env:
+          PUBLIC_CMS_URL: https://superthermcorporations.pages.dev
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist --project-name=superthermcorporations --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'

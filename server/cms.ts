@@ -30,6 +30,8 @@ export interface Env {
   DB?: any;
   MEDIA?: any;
   DEPLOY_HOOK_URL?: string;
+  /** Set when the hook is GitHub's repository_dispatch API, which needs a token. */
+  DEPLOY_HOOK_TOKEN?: string;
 }
 
 const COOKIE = 'cms_session';
@@ -336,7 +338,21 @@ async function publish(req: Request, env: Env) {
   if (env.DEPLOY_HOOK_URL) {
     status = 'failed';
     try {
-      const r = await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' });
+      // A Cloudflare deploy hook is a bare POST. With a token set, the hook is
+      // GitHub's repository_dispatch API, which starts the deploy workflow.
+      const r = env.DEPLOY_HOOK_TOKEN
+        ? await fetch(env.DEPLOY_HOOK_URL, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${env.DEPLOY_HOOK_TOKEN}`,
+              Accept: 'application/vnd.github+json',
+              'Content-Type': 'application/json',
+              'User-Agent': 'supertherm-content-console',
+              'X-GitHub-Api-Version': '2022-11-28',
+            },
+            body: JSON.stringify({ event_type: 'cms-publish' }),
+          })
+        : await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' });
       if (r.ok) status = 'triggered';
     } catch {}
   }

@@ -221,3 +221,28 @@ headings) is not in `site.ts` and so is not editable from the console.
 - The deploy hook URL is a Cloudflare secret, used only by the backend.
 - `/admin` is `noindex`, disallowed in `robots.txt`, and served with `Cache-Control: no-store`.
 - Sign-in hashing uses noticeable CPU time. On the Workers Free plan the per-request CPU limit is low; if sign-in fails with a Cloudflare 1102 error, the project needs the Workers Paid plan.
+
+## Rebuilding on Publish through GitHub Actions
+
+Use this when the Pages project is a direct upload (no Git connection), so Cloudflare
+deploy hooks are not available. `.github/workflows/deploy.yml` builds and deploys the
+site on every push to `main` and whenever the console asks.
+
+1. Repository secrets (GitHub, Settings, Secrets and variables, Actions):
+   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+2. A GitHub fine-grained token limited to this repository with
+   **Contents: Read and write** (that permission is what allows `repository_dispatch`).
+3. Two Pages secrets so Publish can start the workflow:
+
+```bash
+npx wrangler pages secret put DEPLOY_HOOK_URL --project-name superthermcorporations
+#   value: https://api.github.com/repos/<owner>/<repo>/dispatches
+npx wrangler pages secret put DEPLOY_HOOK_TOKEN --project-name superthermcorporations
+#   value: the GitHub token from step 2
+```
+
+4. Deploy once so the secrets take effect. Publish then starts a "Deploy site" run,
+   visible under the repository's Actions tab; the change is live when it finishes.
+
+With `DEPLOY_HOOK_TOKEN` unset, `DEPLOY_HOOK_URL` is treated as a plain Cloudflare deploy hook.
+

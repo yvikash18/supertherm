@@ -24,6 +24,8 @@ migrations_dir = "d1/migrations"
 # bucket_name = "supertherm-media"
 
 # Secret, never stored in this file:
-#   DEPLOY_HOOK_URL   Cloudflare Pages deploy hook, used by the Publish button.
+#   DEPLOY_HOOK_URL   Rebuild trigger used by the Publish button: a Cloudflare Pages deploy
+#                     hook, or GitHub's repository_dispatch URL (see docs/CMS-SETUP.md).
+#   DEPLOY_HOOK_TOKEN GitHub token, only when DEPLOY_HOOK_URL is the GitHub URL.
 #   Set with:  npx wrangler pages secret put DEPLOY_HOOK_URL
 #   For local testing put it in .dev.vars (git-ignored).
