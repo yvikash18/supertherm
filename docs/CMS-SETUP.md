@@ -1,83 +1,223 @@
-# Supertherm CMS + Deploy Console — Setup
+# Content console: setup and use
 
-Manage the content of every route from a passcode-protected console, with a full
-change history, and trigger a Cloudflare Pages deploy from the same screen.
+The site has a console at `/admin` where everything in `src/data/site.ts` can be edited
+through forms: company and contact details, the menu, home page figures, machines and
+their specification tables, about page, offices, clients and testimonials, photos, and
+page headings. People sign in with an email and password.
+
+It runs entirely on Cloudflare, alongside the site:
 
 ```
-Browser (/admin)  ──POST(passcode)──►  Supabase Edge Function `admin`
-                                         │  (service role, secrets stay server-side)
-                                         ├─► pages / page_revisions  (read + write + history)
-                                         └─► Cloudflare Pages deploy hook  (rebuild + publish)
+Browser (/admin)  ── same-origin requests, HttpOnly session cookie ──►  Pages Functions (/api/*)
+                                                                         ├─ D1 database: content, change history, admins, sessions
+                                                                         ├─ R2 bucket: uploaded images (optional), served at /media/*
+                                                                         └─ Cloudflare Pages deploy hook: rebuild the site
 
-Static build (Astro)  ──fetch(anon, build time)──►  Supabase `pages`  ──►  live site
-                        (falls back to src/data/site.ts if not configured)
+Site build (Astro)  ── GET {PUBLIC_CMS_URL}/api/content at build time ──►  published content
+                       (falls back to src/data/site.ts if unset or unreachable)
 ```
 
-## What's in the repo
+Three ideas to keep in mind:
+
+- **Save** stores your edit in the console and adds it to the change history. Nothing changes on the live site.
+- **Publish** takes everything saved, marks it as the published version, and asks Cloudflare to rebuild the site. The public endpoint only ever returns published content, so unpublished edits are private.
+- A section that has never been saved shows the built-in content from `site.ts`. Once a section is saved and published, the console's copy wins over `site.ts` for that section.
+
+## What is in the repo
 
 | Path | Purpose |
 |------|---------|
-| `supabase/migrations/0001_init.sql` | Tables: `pages`, `page_revisions`, `deployments` + RLS (public read, writes via service role only) |
-| `supabase/seed.sql` | Seeds one row per route from the current site content |
-| `supabase/functions/admin/index.ts` | Edge Function: passcode-gated read/save/history + deploy trigger |
-| `src/data/content.ts` | Build-time loader — merges Supabase content over `site.ts`, falls back to static |
-| `src/pages/admin.astro` | The console UI (`/admin`, no-index) |
-| `.env.example` | Required env vars |
+| `functions/api/[[path]].ts`, `functions/media/[[path]].ts` | Cloudflare Pages Functions entry points. Deployed automatically with the site. |
+| `server/cms.ts` | The backend: sign-in, sessions, content, history, publish, uploads. |
+| `server/password.mjs` | Password hashing, shared by the backend and the admin script. |
+| `d1/migrations/0001_init.sql` | Database tables. |
+| `d1/seed.sql` | Optional starting content, generated from `site.ts` by `npm run cms:seed`. |
+| `scripts/cms-admin.mjs` | Creates an admin or resets a password (`npm run cms:admin`). |
+| `wrangler.toml` | Cloudflare bindings: `DB` (D1) and `MEDIA` (R2). |
+| `src/pages/admin.astro`, `src/admin/` | The console page and its code. |
+| `src/data/content.ts` | Build-time loader: published content if available, else `site.ts`. |
+| `src/data/cms-sections.ts` | Which `site.ts` exports belong to which console section. |
 
 ## One-time setup
 
-### 1. Create a Supabase project
-Grab **Project URL**, **anon key**, and **service_role key** from *Project Settings → API*.
+You need Node 20 or newer, and a Cloudflare account that owns the Pages project
+`superthermcorporations`. Run the commands from the project folder.
 
-### 2. Create the schema + seed
-In the Supabase **SQL editor**, run:
-1. `supabase/migrations/0001_init.sql`
-2. `supabase/seed.sql`
+### 1. Sign in to Cloudflare from the terminal
 
-(Or with the CLI: `supabase db push` then `psql < supabase/seed.sql`.)
-
-### 3. Deploy the Edge Function
 ```bash
-supabase functions deploy admin --no-verify-jwt
-supabase secrets set ADMIN_PASSCODE="choose-a-strong-passcode"
-supabase secrets set CF_DEPLOY_HOOK="https://api.cloudflare.com/client/v4/pages/.../deploy_hooks/..."
+npm install
+npx wrangler login
 ```
-Get the **CF_DEPLOY_HOOK** from Cloudflare Pages → your project → *Settings → Builds & deployments → Deploy hooks*.
 
-### 4. Point the site at Supabase
-Create `.env` (see `.env.example`):
+### 2. Create the database
+
+```bash
+npx wrangler d1 create supertherm-cms
 ```
-PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+The command prints a `database_id`. Open `wrangler.toml` and replace the placeholder
+`00000000-0000-0000-0000-000000000000` with it.
+
+### 3. Create the tables
+
+```bash
+npx wrangler d1 migrations apply supertherm-cms --remote
 ```
-Set the same two vars in **Cloudflare Pages → Settings → Environment variables** so production builds pull live content.
 
-### 5. Deploy the site to Cloudflare Pages
-- Build command: `npm run build`
-- Output directory: `dist`
+Optional: load the site's built-in content into the console as a starting point.
+You can skip this. The console shows the built-in content for unsaved sections anyway,
+and skipping it means later edits to `site.ts` keep showing through until a section is
+saved in the console.
 
-## Daily use
+```bash
+npm run cms:seed      # regenerates d1/seed.sql from the current site.ts
+npx wrangler d1 execute supertherm-cms --remote --file=d1/seed.sql
+```
 
-1. Go to `https://your-site/admin`, enter the passcode.
-2. Pick a route, edit its JSON content, add a **summary of what changed**, click **Save** (logged to history).
-3. Click **Deploy site** → rebuilds and publishes with the latest content.
-4. **Change history** under each route shows every edit (summary · time · author).
+### 4. Image uploads (optional)
 
-## How content flows to pages
+```bash
+npx wrangler r2 bucket create supertherm-media
+```
 
-`src/data/content.ts` fetches `pages` at build time and exposes:
-- `company` — global info (merged over `site.ts`)
-- `stats`, `home` — homepage bits
-- `heroFor(slug, fallback)` — per-route hero (already wired into About, Products, Gallery, Branches, Clients, Contact)
+R2 has to be enabled on the Cloudflare account first (dashboard, R2). If you do not want
+uploads, delete the `[[r2_buckets]]` block from `wrangler.toml`. Image fields then accept a
+path such as `/assets/photo.jpg` or a full web address, and the Upload button is disabled.
 
-To make more fields editable, add them to the route's JSON in the console and read
-them via `cmsContent['<slug>']` (or extend `content.ts`). Structured data such as the
-full product spec tables can be pasted into the `products` JSON and mapped in `content.ts`.
+Uploads are limited to signed-in admins, to JPG, PNG, WebP, AVIF and GIF, and to 5 MB.
+The bucket stays private; images are served by the site at `/media/...`.
+
+### 5. Create the first admin
+
+There is no sign-up page. Admins are created from the terminal:
+
+```bash
+npm run cms:admin -- you@example.com
+```
+
+It asks for a password (at least 10 characters, typed twice, not shown), hashes it on your
+computer and writes `.cms-admin.sql`. Apply it, then delete the file:
+
+```bash
+npx wrangler d1 execute supertherm-cms --remote --file=.cms-admin.sql
+rm .cms-admin.sql
+```
+
+Repeat for each person who should be able to edit. To remove someone:
+`npm run cms:admin -- someone@example.com --remove`, then apply the file the same way.
+
+### 6. Deploy hook, so Publish can rebuild the site
+
+In the Cloudflare dashboard: Workers & Pages, the `superthermcorporations` project,
+Settings, Builds, **Deploy hooks**, add a hook for the production branch and copy its URL.
+Store it as a secret (it is never written into the repo or the page):
+
+```bash
+npx wrangler pages secret put DEPLOY_HOOK_URL --project-name superthermcorporations
+```
+
+Deploy hooks exist only for Pages projects that build from a connected Git repository.
+If the site is published by uploading from a computer (`npm run deploy`), there is nothing
+for the hook to trigger: Publish still marks the content as published, the console says no
+rebuild was started, and the change appears the next time someone runs `npm run deploy`.
+
+### 7. Tell the build where to read content
+
+Set a build variable in the Pages project (Settings, Variables and secrets), for
+production and preview:
+
+```
+PUBLIC_CMS_URL = https://www.superthermcorporations.com
+```
+
+That is the site's own address; the build calls `/api/content` on it. For builds on your
+own computer, put the same line in `.env` (see `.env.example`). Without it the site builds
+from `site.ts` only.
+
+### 8. Deploy
+
+Commit `wrangler.toml` with the real `database_id` and deploy as usual (push to the
+connected branch, or `npm run deploy`). Cloudflare Pages reads the D1 and R2 bindings
+from `wrangler.toml` and builds the `functions/` folder with the site. Once Pages uses
+`wrangler.toml`, bindings are managed in that file, not in the dashboard.
+
+### 9. Check that it works
+
+1. Open `https://your-site/api/content`. You should see `{"content":{}}` (or content, once published).
+2. Open `https://your-site/admin` and sign in.
+3. In Page headings, change a heading, add a note, press **Save**. It appears under Change history.
+4. Press **Publish**. In the Cloudflare dashboard a new deployment should start.
+5. When it finishes, the live page shows the new heading.
+6. Change it back the same way, or use **Restore** in the change history, then Save and Publish.
+
+If the sign-in screen says setup is not finished, it tells you which step is missing
+(database not bound, tables not created, or no admin yet).
+
+## Day-to-day use
+
+1. Go to `/admin` and sign in. You stay signed in on that browser for 7 days.
+2. Pick a section on the left. Edit the fields. Lists have Add, move up, move down and remove. Specification tables let you add and remove rows and columns.
+3. Optionally say what you changed, then **Save**. A dot marks sections with unsaved changes.
+4. When you are ready for the changes to go live, press **Publish**.
+5. **Change history** lists every save of the section. **Restore** loads an older version into the editor; save and publish to make it live.
+6. **Load built-in content** puts the section back to what is in `site.ts`.
+7. The **JSON** view shows the same content as raw data, for bulk edits or pasting.
+8. Change your password from the menu under your email address.
+
+Image fields take a path (`/assets/...`), a full web address, or an upload.
+
+## Forgotten passwords and lockouts
+
+There is no "reset by email": Cloudflare does not send email on its own, and adding a mail
+provider was left out on purpose. To reset a password, the person who looks after the site
+runs the same command as for creating an admin:
+
+```bash
+npm run cms:admin -- you@example.com
+npx wrangler d1 execute supertherm-cms --remote --file=.cms-admin.sql
+rm .cms-admin.sql
+```
+
+This sets the new password, signs that person out everywhere, and clears any lockout.
+
+After 5 wrong passwords for one email within 15 minutes, sign-in for that email is refused
+until the attempts are 15 minutes old (30 attempts per network address, likewise).
+
+## Testing on your own computer
+
+No Cloudflare account is needed; Wrangler emulates D1 and R2 locally in `.wrangler/`.
+
+```bash
+npx wrangler d1 migrations apply supertherm-cms --local
+npm run cms:admin -- test@example.com
+npx wrangler d1 execute supertherm-cms --local --file=.cms-admin.sql && rm .cms-admin.sql
+npm run cms:dev          # builds the site, then serves it with the backend on http://localhost:8788
+```
+
+Open `http://localhost:8788/admin`. To see published content in a build:
+`PUBLIC_CMS_URL=http://localhost:8788 npm run build`.
+
+Under `npm run preview` or `npm run dev` there is no backend, so `/admin` says it is not
+connected and offers **Preview the editor**: the forms with the built-in content, with
+saving, publishing and uploading switched off.
+
+## Adding new content to the console
+
+Add the new export to `src/data/site.ts`, add its name to a section in
+`src/data/cms-sections.ts`, and export it from `src/data/content.ts` with `pick('name')`.
+The form is generated from the shape of the data. Labels, help text and image fields can
+be tuned in `src/admin/hints.ts`. `npm run cms:seed` fails if an export is not in a section.
+
+Text written directly in the page files (for example the home page headline and section
+headings) is not in `site.ts` and so is not editable from the console.
 
 ## Security notes
-- The **service_role key never reaches the browser** — only the Edge Function uses it.
-- The console only holds the **shared passcode** (kept in `sessionStorage`); every write is
-  re-verified server-side.
-- `/admin` is `noindex` and disallowed in `robots.txt`.
-- A shared passcode is convenient but coarse — upgrade to Supabase Auth (per-user) if you
-  need individual accounts/roles later.
+
+- Passwords are stored as PBKDF2-HMAC-SHA-256 hashes with a random salt per user and 100,000 iterations, the highest count the Cloudflare Workers runtime allows. Comparison is constant-time.
+- A session is a random 256-bit token. Only its SHA-256 is stored. It is sent as a `HttpOnly; Secure; SameSite=Strict` cookie limited to `/api`, expires after 7 days, and is deleted on sign-out. Changing a password signs out other devices.
+- Every request that changes anything must come from the site's own origin and carry a custom header, in addition to the SameSite cookie, to block cross-site request forgery.
+- Every `/api/admin/*` request checks the session. `/api/content` is the only public data endpoint and returns published content only.
+- The deploy hook URL is a Cloudflare secret, used only by the backend.
+- `/admin` is `noindex`, disallowed in `robots.txt`, and served with `Cache-Control: no-store`.
+- Sign-in hashing uses noticeable CPU time. On the Workers Free plan the per-request CPU limit is low; if sign-in fails with a Cloudflare 1102 error, the project needs the Workers Paid plan.

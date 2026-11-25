@@ -3,22 +3,19 @@
 A modern, animated rebuild of [superthermcorporations.com](https://www.superthermcorporations.com/)
 for **Supertherm Corporations**, a manufacturer of induction heating equipment.
 
-**Design language:** dark industrial + molten-glow. Cinematic, scroll-driven motion.
+**Design language (v2):** light cabinet-enamel grey and control-panel blue taken from
+the machines themselves; the heat colours appear only where metal is hot. One typeface
+(Archivo), used condensed and heavy for display type, normal width for text.
 
 ## Tech stack
 
-| Concern      | Choice |
-|--------------|--------|
-| Framework    | [Astro 4](https://astro.build) (static, zero-JS by default) |
-| Styling      | [Tailwind CSS 3](https://tailwindcss.com) (`@astrojs/tailwind`) + scoped component CSS + CSS custom properties |
-| Scroll/motion| [GSAP + ScrollTrigger](https://gsap.com) (parallax, magnetic buttons, tilt) |
-| WebGL        | [Three.js](https://threejs.org) (hero ember/heat particle field) |
-| Fonts        | Space Grotesk (display) + Inter (body) |
-
-> **Why Astro 4 / Tailwind 3?** The build machine runs Node 18.19.1. Astro 5 and
-> Tailwind 4 require Node ≥ 18.20.8 / 20+. Pinning to Astro 4 + Tailwind 3 keeps the
-> project building on the current Node with no change to the visual output. Bump Node
-> to 20 LTS later and these can be upgraded.
+| Concern | Choice |
+|---------|--------|
+| Framework | [Astro 4](https://astro.build), static output |
+| Styling | Design tokens and components in `src/styles/global.css`, scoped component CSS, Tailwind 3 utilities |
+| Motion | CSS transitions driven by `IntersectionObserver`; [GSAP ScrollTrigger](https://gsap.com) for the one pinned scene and the pointer-follow preview |
+| Hero | Canvas 2D drawing of a billet heater (`src/components/HeatLine.astro`), no WebGL |
+| Type | Archivo variable (width and weight axes) from Google Fonts |
 
 ## Commands
 
@@ -33,27 +30,35 @@ npm run preview  # preview the production build
 
 ```
 src/
-  data/site.ts          # single source of truth: company, products, stats, branches, clients…
-  layouts/Layout.astro  # <head>, SEO/OG, nav + footer, motion bootstrap
-  scripts/motion.ts     # reveals, counters, magnetic buttons, 3D tilt, GSAP parallax
+  data/site.ts            # content: company, products, stats, branches, clients
+  data/content.ts         # what pages import: published console content, else site.ts
+  data/cms-sections.ts    # how site.ts exports are grouped into console sections
+  admin/                  # /admin console: generated forms, sign-in, save, publish
+  lib/heat.ts             # colour of steel at temperature, shared by hero and sizing tool
+  layouts/Layout.astro    # <head>, SEO, nav, footer
+  scripts/motion.ts       # entrances, pinned statement, row preview, nav
   components/
-    EmberField.astro    # Three.js WebGL ember/heat particle hero background
-    Nav.astro Footer.astro Logo.astro Icon.astro
-    SectionHeading.astro StatStrip.astro ProductCard.astro
-    PageHero.astro CtaBand.astro
-  pages/
-    index.astro about.astro products.astro gallery.astro
-    branches.astro clients.astro contact.astro 404.astro
-  styles/global.css     # design tokens, Tailwind layers, animation keyframes
-public/
-  favicon.svg
-  gallery/              # (add real project photos here — see Gallery page note)
+    HeatLine.astro        # hero: bars passing through an induction coil
+    SizingTool.astro      # bar diameter -> frequency band and machine series
+    Compare.astro         # induction against oil- and gas-fired furnaces
+    Glyph.astro           # process diagrams for the four machine families
+    Display.astro         # display headline with word-by-word rise
+    Plate.astro Enquiry.astro PageHero.astro Nav.astro Footer.astro
+  pages/                  # index, about, products, gallery, branches, clients, contact, admin, 404
+  styles/global.css       # tokens, type scale, shared components, motion primitives
 ```
 
 ## Editing content
 
 Almost all copy lives in **`src/data/site.ts`** — company details, product specs,
 stats, branches, countries, clients and testimonials. Edit there and every page updates.
+
+Everything in `site.ts` can also be edited without touching code, from the content
+console at **`/admin`** (email and password sign-in, change history, publish button).
+The console's backend runs on Cloudflare with the site: Pages Functions in `functions/`
+(logic in `server/cms.ts`), a D1 database (`d1/`) and an optional R2 bucket for image
+uploads. Setup and day-to-day use are in **`docs/CMS-SETUP.md`**. Once a section has been
+saved and published from the console, the console's copy wins over `site.ts` for that section.
 
 ## To do before launch
 
@@ -66,6 +71,7 @@ stats, branches, countries, clients and testimonials. Edit there and every page 
 
 ## Accessibility & performance notes
 
-- Respects `prefers-reduced-motion` (disables WebGL, reveals show instantly).
-- WebGL hero pauses when scrolled out of view; particle count scales down on mobile.
-- Reveal states are guarded behind `html.js` so content is visible if JS fails.
+- `prefers-reduced-motion`: entrances show immediately, the hero draws one still frame,
+  the pinned scene is not pinned.
+- Motion styles are scoped to `html.js`, so content is visible if scripts fail.
+- The hero canvas stops drawing when scrolled out of view.

@@ -1,76 +1,87 @@
 ---
-import { nav, company } from '../data/site';
+import { nav } from '../data/content';
+import { company } from '../data/content';
 import Logo from './Logo.astro';
-import Toolbar from './Toolbar.astro';
+interface Props { overDark?: boolean }
+const { overDark = false } = Astro.props;
 const path = Astro.url.pathname;
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const links = nav.filter((n) => n.href !== '/' && n.href !== '/contact');
 ---
 
-<header
-  data-header
-  class="fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background,border-color,backdrop-filter] duration-[400ms] [&.is-scrolled]:border-line [&.is-scrolled]:bg-ink/70 [&.is-scrolled]:backdrop-blur-xl"
->
-  <div data-topbar class="mx-auto flex h-[4.75rem] w-full max-w-[1700px] items-center justify-between px-5 sm:px-8 lg:px-12 xl:px-16">
+<header data-header class:list={['hdr', overDark && 'over-dark']}>
+  <div class="wrap bar">
     <Logo />
 
-    <nav class="hidden items-center gap-7 lg:flex" aria-label="Primary">
-      {
-        nav.map((item) => (
-          <a
-            href={item.href}
-            class:list={[
-              'heat-underline text-[0.92rem] font-medium transition-colors',
-              isActive(item.href) ? 'text-fg [&::after]:w-full' : 'text-muted hover:text-fg',
-            ]}
-          >
-            {item.label}
-          </a>
-        ))
-      }
+    <nav class="links" aria-label="Primary">
+      {links.map((item) => (
+        <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+      ))}
     </nav>
 
-    <div class="flex items-center gap-3">
-      <Toolbar class="hidden lg:flex" />
-      <a href={`tel:${company.phoneRaw}`} class="hidden items-center gap-2 text-[0.85rem] font-medium text-muted xl:inline-flex">
-        <span class="h-2 w-2 animate-[pulse-ring_1.8s_infinite] rounded-full bg-emerald-400"></span>
-        {company.phone}
-      </a>
-      <a href="/contact" class="btn btn-primary px-4 py-2 text-[0.85rem]" data-magnetic="0.3">Get a Quote</a>
-
-      <button
-        data-nav-toggle
-        class="grid h-11 w-11 place-content-center gap-[5px] rounded-xl border border-line bg-white/[0.02] lg:hidden [&.is-open>span:nth-child(1)]:translate-y-[7px] [&.is-open>span:nth-child(1)]:rotate-45 [&.is-open>span:nth-child(2)]:opacity-0 [&.is-open>span:nth-child(3)]:-translate-y-[7px] [&.is-open>span:nth-child(3)]:-rotate-45"
-        aria-label="Toggle menu"
-      >
-        <span class="block h-0.5 w-5 bg-fg transition-transform"></span>
-        <span class="block h-0.5 w-5 bg-fg transition-opacity"></span>
-        <span class="block h-0.5 w-5 bg-fg transition-transform"></span>
+    <div class="right">
+      <a href="/contact" class="btn btn-solid btn-sm">Enquire</a>
+      <button data-nav-toggle class="burger" aria-label="Menu" aria-expanded="false" aria-controls="nav-panel">
+        <span></span><span></span>
       </button>
     </div>
   </div>
-
-  <!-- Mobile panel -->
-  <div
-    data-nav-panel
-    class="fixed inset-x-0 top-[4.75rem] flex -translate-y-[120%] flex-col gap-1 border-b border-line bg-ink/[0.97] p-6 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] [&.is-open]:translate-y-0 lg:hidden"
-  >
-    <nav class="flex flex-col" aria-label="Mobile">
-      {
-        nav.map((item) => (
-          <a
-            href={item.href}
-            class:list={[
-              'border-b border-line px-1 py-3.5 font-display text-xl font-semibold',
-              isActive(item.href) ? 'text-molten-300' : 'text-muted',
-            ]}
-          >
-            {item.label}
-          </a>
-        ))
-      }
-    </nav>
-    <a href="/contact" class="btn btn-primary mt-5 justify-center">Get a Quote</a>
-    <Toolbar class="mt-4 justify-center" />
-    <a href={`tel:${company.phoneRaw}`} class="mt-3.5 text-center text-[0.9rem] text-muted">{company.phone}</a>
-  </div>
 </header>
+
+<div id="nav-panel" data-nav-panel class="panel on-night" hidden>
+  <nav aria-label="Mobile">
+    {nav.map((item, i) => (
+      <a href={item.href} style={`--i:${i}`} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+    ))}
+  </nav>
+  <div class="foot">
+    <a href={`tel:${company.phoneRaw}`} class="num">{company.phone}</a>
+    <a href="/contact">Enquire</a>
+  </div>
+</div>
+
+<style>
+  .hdr {
+    position: fixed; inset: 0 0 auto 0; z-index: 50; height: var(--nav-h);
+    background: color-mix(in srgb, var(--floor) 92%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    transition: transform 0.4s var(--ease), background-color 0.25s, border-color 0.25s;
+  }
+  :global(.hdr.is-hidden) { transform: translateY(-100%); }
+  /* Over the dark hero the bar is clear until the page scrolls */
+  :global(.hdr.menu-over),
+  :global(.hdr.over-dark:not(.is-scrolled)) {
+    --fg: #e7eae7; --fg-3: #a9b4be; --line: transparent; --btn-bg: #e7eae7; --btn-fg: var(--steel); --btn-bg-hover: #fff;
+    background: transparent; backdrop-filter: none; color: var(--fg);
+  }
+  .bar { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+  .links { display: none; gap: clamp(1.25rem, 2.4vw, 2.5rem); }
+  .links a { font-weight: 550; font-size: 1rem; padding-block: 0.4rem; border-bottom: 2px solid transparent; transition: border-color 0.15s; }
+  .links a:hover { border-bottom-color: currentColor; }
+  .links a[aria-current] { border-bottom-color: var(--h900); }
+  .right { display: flex; align-items: center; gap: 1rem; }
+  .burger { display: grid; gap: 7px; width: 2.75rem; height: 2.75rem; place-content: center; color: var(--fg); }
+  .burger span { display: block; width: 1.5rem; height: 2px; background: currentColor; transition: transform 0.3s var(--ease); }
+  :global(.burger.is-open) span:first-child { transform: translateY(4.5px) rotate(45deg); }
+  :global(.burger.is-open) span:last-child { transform: translateY(-4.5px) rotate(-45deg); }
+
+  .panel {
+    position: fixed; inset: 0; z-index: 45; padding: calc(var(--nav-h) + 1.5rem) var(--pad) 2rem;
+    display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;
+  }
+  .panel[hidden] { display: none; }
+  .panel nav { display: flex; flex-direction: column; }
+  .panel nav a {
+    font-stretch: 68%; font-weight: 800; text-transform: uppercase; font-size: clamp(2.5rem, 12vw, 4rem); line-height: 1.05;
+    animation: panel-in 0.6s var(--ease) both; animation-delay: calc(var(--i) * 45ms);
+  }
+  .panel nav a[aria-current] { color: var(--h1100); }
+  .foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 1rem; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(0.5em); } }
+
+  @media (min-width: 1024px) {
+    .links { display: flex; }
+    .burger { display: none; }
+  }
+</style>

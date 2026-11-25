@@ -1,0 +1,136 @@
+---
+// Sizing tool: pick a bar diameter, get the Forge Master frequency band for it.
+// Bands are the published I-Series / T-Series ranges in src/data/site.ts
+// (products[0].specGroups). The depth figure is physics, not a rating:
+// reference depth in steel above the Curie point, d = 503 * sqrt(rho / f),
+// with rho = 1.1 micro-ohm metre.
+const bands = [
+  { max: 24, khz: 30, series: 'I-Series', kw: '50–250 kW' },
+  { max: 40, khz: 10, series: 'I-Series', kw: '50–350 kW' },
+  { max: 65, khz: 3, series: 'I-Series or T-Series', kw: '50–1000 kW' },
+  { max: 120, khz: 1, series: 'T-Series', kw: '100–1500 kW' },
+  { max: 200, khz: 0.5, series: 'T-Series', kw: '100–2000 kW' },
+];
+---
+
+<div class="tool on-night" data-sizing data-bands={JSON.stringify(bands)}>
+  <div class="view">
+    <svg viewBox="0 0 400 400" role="img" aria-label="Cross-section of the bar showing where the current heats it">
+      <defs>
+        <radialGradient id="sz-bar">
+          <stop data-s="core" offset="0" stop-color="#56626e" />
+          <stop data-s="core-edge" offset="0.6" stop-color="#56626e" />
+          <stop data-s="skin" offset="1" stop-color="#56626e" />
+        </radialGradient>
+        <radialGradient id="sz-glow">
+          <stop offset="0.45" stop-color="#f25c0f" stop-opacity="0.5" />
+          <stop offset="1" stop-color="#f25c0f" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <circle data-glow cx="200" cy="200" r="190" fill="url(#sz-glow)" opacity="0" />
+      <circle data-coil cx="200" cy="200" r="150" fill="none" stroke="var(--copper)" stroke-width="12" stroke-dasharray="6 3" />
+      <circle data-bar cx="200" cy="200" r="100" fill="url(#sz-bar)" />
+      <circle data-depth cx="200" cy="200" r="80" fill="none" stroke="#131c26" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.6" />
+    </svg>
+    <p class="cap"><span class="key"></span> Dashed ring: how deep the current reaches</p>
+  </div>
+
+  <div class="ctl">
+    <label for="sz-d">Bar diameter</label>
+    <output class="figure num" for="sz-d"><span data-d>50</span><small>mm</small></output>
+    <input id="sz-d" type="range" min="7" max="200" step="1" value="50" />
+    <div class="scale num" aria-hidden="true"><span>7</span><span>200 mm</span></div>
+
+    <dl class="rows res" aria-live="polite">
+      <div class="kv"><dt>Frequency</dt><dd class="num"><span data-f>3</span> kHz</dd></div>
+      <div class="kv"><dt>Machine</dt><dd>Forge Master <span data-series>I-Series</span></dd></div>
+      <div class="kv"><dt>Power range</dt><dd class="num" data-kw>50–350 kW</dd></div>
+      <div class="kv"><dt>Current depth</dt><dd class="num"><span data-depthmm>9.6</span> mm from the surface; the core follows by conduction</dd></div>
+    </dl>
+    <a class="btn btn-solid" data-enquire href="/contact?interest=Induction+Forging">Enquire about this size</a>
+    <p class="note">Indicative, for steel bar heated through for forging. We size the coil and power source to your part and output.</p>
+  </div>
+</div>
+
+<style>
+  .tool { display: grid; border-radius: 4px; overflow: hidden; }
+  .view { background: #070c12; padding: clamp(1rem, 3vw, 2rem); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  svg { width: 100%; max-width: 26rem; height: auto; }
+  .cap { font-size: 0.875rem; color: var(--fg-3); display: flex; gap: 0.5rem; align-items: center; }
+  .key { width: 1.25rem; border-top: 1px dashed currentColor; }
+  .ctl { padding: clamp(1.5rem, 4vw, 3rem); display: flex; flex-direction: column; align-items: flex-start; }
+  label { color: var(--fg-3); }
+  output { display: block; font-size: clamp(3.5rem, 7vw, 6rem); margin-top: 0.25rem; }
+  input[type='range'] { width: 100%; margin-top: 1.25rem; accent-color: var(--h900); height: 2rem; cursor: ew-resize; }
+  .scale { display: flex; justify-content: space-between; width: 100%; font-size: 0.875rem; color: var(--fg-3); }
+  .res { width: 100%; margin-block: 1.75rem; }
+  .note { margin-top: 1rem; max-width: 32rem; }
+  @media (min-width: 900px) { .tool { grid-template-columns: 1fr 1.1fr; } }
+</style>
+
+<script>
+  import { tempCSS } from '../lib/heat';
+
+  const root = document.querySelector<HTMLElement>('[data-sizing]');
+  if (root) {
+    type Band = { max: number; khz: number; series: string; kw: string };
+    const bands: Band[] = JSON.parse(root.dataset.bands || '[]');
+    const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const input = $<HTMLInputElement>('input');
+    const bar = $<SVGCircleElement>('[data-bar]'), ring = $<SVGCircleElement>('[data-depth]');
+    const coil = $<SVGCircleElement>('[data-coil]'), glow = $<SVGCircleElement>('[data-glow]');
+    const sCore = $<SVGStopElement>('[data-s=core]'), sEdge = $<SVGStopElement>('[data-s=core-edge]'), sSkin = $<SVGStopElement>('[data-s=skin]');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+
+    function update(animate: boolean) {
+      const d = Number(input.value);
+      const band = bands.find((b) => d <= b.max) ?? bands[bands.length - 1];
+      const depth = 527 / Math.sqrt(band.khz * 1000); // mm
+      const frac = Math.min(0.92, depth / (d / 2)); // share of the radius carrying current
+
+      $('[data-d]').textContent = String(d);
+      $('[data-f]').textContent = String(band.khz);
+      $('[data-series]').textContent = band.series;
+      $('[data-kw]').textContent = band.kw;
+      $('[data-depthmm]').textContent = depth.toFixed(1);
+      $<HTMLAnchorElement>('[data-enquire]').href =
+        `/contact?interest=${encodeURIComponent('Induction Forging')}&note=${encodeURIComponent(`Bar diameter ${d} mm (${band.khz} kHz, Forge Master ${band.series})`)}`;
+
+      // Drawing: radius on a square-root scale so 7 mm is still visible beside 200 mm
+      const r = 34 + 106 * Math.sqrt((d - 7) / 193);
+      bar.setAttribute('r', r.toFixed(1));
+      ring.setAttribute('r', (r * (1 - frac)).toFixed(1));
+      coil.setAttribute('r', (r + 22).toFixed(1));
+      glow.setAttribute('r', (r + 70).toFixed(1));
+      sEdge.setAttribute('offset', (1 - frac).toFixed(3));
+
+      // The skin heats first; the core catches up by conduction.
+      cancelAnimationFrame(raf);
+      const paint = (k: number) => {
+        const skin = 30 + 1220 * Math.min(1, k * 1.9);
+        const core = 30 + 1130 * Math.max(0, (k - 0.3) / 0.7) ** 1.4;
+        sSkin.setAttribute('stop-color', tempCSS(skin));
+        sEdge.setAttribute('stop-color', tempCSS(core + (skin - core) * 0.25));
+        sCore.setAttribute('stop-color', tempCSS(core));
+        glow.setAttribute('opacity', Math.min(1, k * 1.4).toFixed(2));
+      };
+      if (!animate || reduced) return paint(1);
+      const t0 = performance.now();
+      const run = (now: number) => {
+        const k = Math.min(1, (now - t0) / 1800);
+        paint(k);
+        if (k < 1) raf = requestAnimationFrame(run);
+      };
+      raf = requestAnimationFrame(run);
+    }
+
+    input.addEventListener('input', () => update(false));
+    input.addEventListener('change', () => update(true));
+    update(false);
+    // Heat the section through once when it first comes into view
+    new IntersectionObserver((es, io) => {
+      if (es[0].isIntersecting) { update(true); io.disconnect(); }
+    }, { threshold: 0.4 }).observe(root);
+  }
+</script>

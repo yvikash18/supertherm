@@ -1,0 +1,29 @@
+# Cloudflare Pages configuration for the site and its content console.
+# The static site is built to dist/; the backend is the Pages Functions in
+# functions/ (logic in server/cms.ts). See docs/CMS-SETUP.md.
+name = "superthermcorporations"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+# Content, revisions, admin users and sessions.
+# Replace database_id with the id printed by:
+#   npx wrangler d1 create supertherm-cms
+[[d1_databases]]
+binding = "DB"
+database_name = "supertherm-cms"
+database_id = "3463ec58-0064-4d4f-9ed7-8e7a1495f9e7"
+migrations_dir = "d1/migrations"
+
+# Images uploaded from the console (optional). Create with:
+#   npx wrangler r2 bucket create supertherm-media
+# Remove this block if you do not want uploads; image fields then take a path or URL only.
+# Disabled for now: R2 is not enabled on this Cloudflare account. Enable R2 in the
+# dashboard, create the bucket, then uncomment these three lines and redeploy.
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "supertherm-media"
+
+# Secret, never stored in this file:
+#   DEPLOY_HOOK_URL   Cloudflare Pages deploy hook, used by the Publish button.
+#   Set with:  npx wrangler pages secret put DEPLOY_HOOK_URL
+#   For local testing put it in .dev.vars (git-ignored).

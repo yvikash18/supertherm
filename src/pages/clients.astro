@@ -1,80 +1,70 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
-import StatStrip from '../components/StatStrip.astro';
-import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
-import { company, clientSectors, testimonials, clientLogos } from '../data/site';
-import { heroFor } from '../data/content';
+import Display from '../components/Display.astro';
+import Plate from '../components/Plate.astro';
+import Enquiry from '../components/Enquiry.astro';
+import { clientSectors, clientLogos, testimonials } from '../data/content';
+import { si } from '../lib/format';
+import { company, heroFor } from '../data/content';
 
-const hero = heroFor('clients', {
-  eyebrow: 'Clients',
-  title: 'Trusted where heat means business',
-  subtitle: 'From automotive forging giants to independent foundries, manufacturers rely on Supertherm induction systems to run shift after shift.',
-});
+const hero = heroFor('clients');
 ---
 
-<Layout title={`Clients — ${company.name}`} description="Trusted by leading forging, foundry, fastener and tube-mill manufacturers across Asia and the Gulf.">
-  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+<Layout title={`Clients | ${company.name}`} description="Trusted by leading forging, foundry, fastener and tube-mill manufacturers across Asia and the Gulf.">
+  <PageHero title={hero.title} subtitle={hero.subtitle} />
 
-  <!-- Client logo wall (real logos on white cards, never cropped) -->
-  <section class="py-20">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <p class="mb-10 text-center text-[0.78rem] uppercase tracking-[0.2em] text-faint" data-reveal>A selection of the companies we serve</p>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+  <section class="section-tight logos-sec">
+    <div class="wrap">
+      <ul class="logos">
         {clientLogos.map((src, i) => (
-          <div
-            class="flex aspect-[3/2] items-center justify-center rounded-xl border border-line bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-molten-400 hover:shadow-[0_16px_40px_-16px_rgba(247,93,2,0.45)]"
-            data-reveal="scale"
-            style={`--reveal-delay:${(i % 5) * 55}ms`}
-          >
-            <img src={src} alt={`Supertherm client ${i + 1}`} loading="lazy" class="max-h-full max-w-full object-contain" />
-          </div>
+          <li data-in style={`--i:${i % 5}`}><img src={src} alt={`Supertherm client logo ${i + 1}`} loading="lazy" width="436" height="300" /></li>
         ))}
-      </div>
+      </ul>
     </div>
   </section>
 
-  <StatStrip />
+  <Plate />
 
-  <!-- Sectors -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <div class="max-w-2xl" data-reveal>
-        <span class="eyebrow">Industries</span>
-        <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.6rem)] font-bold">Sectors we <span class="text-gradient">power</span></h2>
-      </div>
-      <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {clientSectors.map((s, i) => (
-          <div class="card flex items-center gap-3 px-6 py-5 text-[0.95rem] font-medium transition-colors duration-300 hover:border-molten-400" data-tilt data-reveal style={`--reveal-delay:${(i % 5) * 60}ms`}>
-            <Icon name="spark" class="h-[1.35rem] w-[1.35rem] shrink-0 text-molten-300" /><span>{s}</span>
-          </div>
-        ))}
-      </div>
+  <section class="section">
+    <div class="wrap split">
+      <Display text="Industries we heat for" />
+      <ul class="rows sectors">
+        {clientSectors.map((s, i) => <li data-in style={`--i:${i % 5}`}>{s}</li>)}
+      </ul>
     </div>
   </section>
 
-  <!-- Testimonials -->
-  <section class="py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <div class="mx-auto max-w-2xl text-center" data-reveal>
-        <span class="eyebrow">Testimonials</span>
-        <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.6rem)] font-bold">What our clients say</h2>
-      </div>
-      <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+  <section class="section said">
+    <div class="wrap">
+      <Display text="What customers say" />
+      <ul class="quotes">
         {testimonials.map((t, i) => (
-          <figure class="card card-glow p-8" data-reveal style={`--reveal-delay:${i * 90}ms`}>
-            <div class="font-display text-[3.5rem] leading-[0.6] text-molten-500/50">&ldquo;</div>
-            <blockquote class="mt-4 text-[1.02rem] leading-7">{t.quote}</blockquote>
-            <figcaption class="mt-5 flex flex-col">
-              <strong class="text-[0.95rem]">{t.name}</strong>
-              <span class="text-[0.85rem] text-molten-300">{t.org}</span>
-            </figcaption>
-          </figure>
+          <li data-in style={`--i:${i}`}><blockquote>{si(t.quote)}</blockquote><p>{t.name}</p></li>
         ))}
-      </div>
+      </ul>
     </div>
   </section>
 
-  <CtaBand title="Join the manufacturers who trust Supertherm" text="Let's talk about how the right induction system can lift your throughput and quality." />
+  <Enquiry title="Put a Supertherm on your line." text="Tell us the part and the output you need. We will size the machine and quote it." />
 </Layout>
+
+<style>
+  .logos-sec { background: #fff; }
+  .logos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .logos li { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); aspect-ratio: 3 / 2; display: grid; place-items: center; padding: 12%; min-width: 0; }
+  .logos img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+  .said { background: var(--plate); border-top: 1px solid var(--line); }
+  .quotes { display: grid; gap: 2.5rem; margin-top: clamp(2.5rem, 5vw, 4.5rem); }
+  .quotes li { border-top: 1px solid var(--fg); padding-top: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; }
+  .quotes blockquote { font-size: 1.2rem; line-height: 1.4; font-stretch: 92%; font-weight: 500; }
+  .quotes p { font-weight: 700; }
+  @media (min-width: 1000px) { .quotes { grid-template-columns: repeat(3, 1fr); gap: 3rem; } }
+  .sectors li { padding-block: 0.9rem; font-size: 1.25rem; font-stretch: 90%; font-weight: 600; }
+  @media (min-width: 640px) { .logos { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) {
+    .logos { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
+  }
+  @media (max-width: 1023px) { .sectors { margin-top: 2rem; } }
+</style>

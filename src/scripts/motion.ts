@@ -1,256 +1,169 @@
-// Client motion engine (GSAP + ScrollTrigger):
-// staggered scroll reveals, animated counters, magnetic buttons, 3D tilt,
-// parallax layers, hero content parallax, scroll-progress bar and back-to-top.
+// Site motion. Three kinds, each used for one job:
+//   1. Entrances: display type rises word by word, photos wipe open, blocks blur in.
+//   2. One pinned scroll scene on the home page (the "heat pass" statement).
+//   3. Responses to the pointer: machine-row photo preview, nav show/hide.
+// The hero heat line and the sizing tool carry their own scripts.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const coarse = window.matchMedia('(pointer: coarse)').matches;
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-/* ---------------------------------------------------------------- */
-/*  Scroll reveals — reliable per-element IntersectionObserver with   */
-/*  a hard safety net so content can never stay stuck invisible.      */
-/* ---------------------------------------------------------------- */
-function initReveals() {
-  const els = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
-  const show = (el: HTMLElement) => el.classList.add('is-visible');
+/* Entrances ------------------------------------------------------------- */
+function initEntrances() {
+  const els = Array.from(
+    document.querySelectorAll<HTMLElement>('.rise, [data-in], [data-wipe], [data-bars], [data-odo]')
+  );
+  const show = (el: Element) => el.classList.add('is-in');
 
-  if (prefersReduced || !('IntersectionObserver' in window)) {
+  if (reduced || !('IntersectionObserver' in window)) {
     els.forEach(show);
     return;
   }
 
-  const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          show(entry.target as HTMLElement);
-          io.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
+  // Headlines marked to play on load go first, next frame, so the transition runs.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => els.filter((e) => e.dataset.rise === 'load').forEach(show))
   );
-  els.forEach((el) => io.observe(el));
 
-  // Safety net: anything above the fold or missed after 1.2s is revealed,
-  // and a scroll listener reveals anything already in view.
-  const revealInView = () => {
-    els.forEach((el) => {
-      if (el.classList.contains('is-visible')) return;
-      const r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight * 0.95 && r.bottom > 0) {
-        show(el);
-        io.unobserve(el);
-      }
+  const io = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        show(e.target);
+        io.unobserve(e.target);
+      }),
+    { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+  );
+  els.filter((e) => e.dataset.rise !== 'load').forEach((el) => io.observe(el));
+
+  // A fast jump (anchor link, End key, flick) can carry an element from below the
+  // screen to above it between observer checks. Sweep on scroll so nothing that
+  // has been scrolled past is left waiting.
+  let pending = els.filter((e) => e.dataset.rise !== 'load');
+  let queued = false;
+  const sweep = () => {
+    queued = false;
+    const limit = window.innerHeight * 0.92;
+    pending = pending.filter((el) => {
+      if (el.classList.contains('is-in')) return false;
+      if (el.getBoundingClientRect().top < limit) { show(el); io.unobserve(el); return false; }
+      return true;
     });
+    if (!pending.length) window.removeEventListener('scroll', onScroll);
   };
-  requestAnimationFrame(revealInView);
-  setTimeout(revealInView, 1200);
+  const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(sweep); } };
+  window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-/* ---------------------------------------------------------------- */
-/*  Animated counters                                                */
-/* ---------------------------------------------------------------- */
-function animateCounter(el: HTMLElement) {
-  const target = parseFloat(el.dataset.counter || '0');
-  const suffix = el.dataset.suffix || '';
-  if (prefersReduced) {
-    el.textContent = `${target}${suffix}`;
-    return;
-  }
-  const obj = { v: 0 };
-  gsap.to(obj, {
-    v: target,
-    duration: 1.8,
-    ease: 'power2.out',
-    onUpdate: () => (el.textContent = `${Math.round(obj.v)}${suffix}`),
-  });
-}
-function initCounters() {
-  document.querySelectorAll<HTMLElement>('[data-counter]').forEach((el) => {
-    ScrollTrigger.create({
-      trigger: el,
-      start: 'top 85%',
-      once: true,
-      onEnter: () => animateCounter(el),
-    });
-  });
-}
+/* Pinned statement: a heat front passes through the sentence as you scroll */
+function initStatement() {
+  const section = document.querySelector<HTMLElement>('[data-statement]');
+  if (!section) return;
+  const words = Array.from(section.querySelectorAll<HTMLElement>('.sw'));
+  if (reduced || !words.length) return;
 
-/* ---------------------------------------------------------------- */
-/*  Magnetic buttons                                                 */
-/* ---------------------------------------------------------------- */
-function initMagnetic() {
-  if (prefersReduced || coarse) return;
-  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
-    const strength = parseFloat(el.dataset.magnetic || '0.35');
-    el.addEventListener('mousemove', (e) => {
-      const r = el.getBoundingClientRect();
-      const x = e.clientX - r.left - r.width / 2;
-      const y = e.clientY - r.top - r.height / 2;
-      gsap.to(el, { x: x * strength, y: y * strength, duration: 0.4, ease: 'power3.out' });
+  section.classList.add('is-armed');
+  const HOT = 3; // words inside the "coil" at any moment
+  const paint = (p: number) => {
+    const head = p * (words.length + HOT);
+    words.forEach((w, i) => {
+      w.classList.toggle('is-hot', i < head && i >= head - HOT);
+      w.classList.toggle('is-lit', i < head - HOT);
     });
-    el.addEventListener('mouseleave', () =>
-      gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' })
-    );
+    section.style.setProperty('--p', p.toFixed(4));
+  };
+  paint(0);
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top top',
+    end: '+=90%',
+    pin: true,
+    scrub: true,
+    onUpdate: (self) => paint(self.progress),
   });
 }
 
-/* ---------------------------------------------------------------- */
-/*  3D tilt cards                                                    */
-/* ---------------------------------------------------------------- */
-function initTilt() {
-  if (prefersReduced || coarse) return;
-  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
-    const max = 8;
-    el.style.transformStyle = 'preserve-3d';
-    el.addEventListener('mousemove', (e) => {
-      const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      gsap.to(el, {
-        rotateY: px * max,
-        rotateX: -py * max,
-        duration: 0.4,
-        ease: 'power2.out',
-        transformPerspective: 800,
-      });
+/* Machine rows: a photo follows the pointer -------------------------------- */
+function initRowPreview() {
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-preview]'));
+  if (!rows.length || !finePointer || reduced) return;
+
+  const box = document.createElement('div');
+  box.className = 'row-preview';
+  box.setAttribute('aria-hidden', 'true');
+  const img = document.createElement('img');
+  img.alt = '';
+  box.appendChild(img);
+  document.body.appendChild(box);
+  rows.forEach((r) => (new Image().src = r.dataset.preview!)); // warm the cache
+
+  const xTo = gsap.quickTo(box, 'x', { duration: 0.5, ease: 'power3.out' });
+  const yTo = gsap.quickTo(box, 'y', { duration: 0.5, ease: 'power3.out' });
+  rows.forEach((row) => {
+    row.addEventListener('pointerenter', (e) => {
+      img.src = row.dataset.preview!;
+      gsap.set(box, { x: e.clientX, y: e.clientY });
+      box.classList.add('is-on');
     });
-    el.addEventListener('mouseleave', () =>
-      gsap.to(el, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'power3.out' })
-    );
+    row.addEventListener('pointermove', (e) => {
+      xTo(e.clientX);
+      yTo(e.clientY);
+    });
+    row.addEventListener('pointerleave', () => box.classList.remove('is-on'));
   });
+  // Scrolling moves the row out from under a still pointer.
+  window.addEventListener('scroll', () => box.classList.remove('is-on'), { passive: true });
 }
 
-/* ---------------------------------------------------------------- */
-/*  Parallax layers + hero content drift                             */
-/* ---------------------------------------------------------------- */
-function initParallax() {
-  if (prefersReduced) return;
-  document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
-    const depth = parseFloat(el.dataset.parallax || '0.2');
-    gsap.to(el, {
-      yPercent: -depth * 100,
-      ease: 'none',
-      scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
-    });
-  });
-
-  const heroContent = document.querySelector<HTMLElement>('[data-hero-content]');
-  if (heroContent) {
-    gsap.to(heroContent, {
-      yPercent: 18,
-      opacity: 0.35,
-      ease: 'none',
-      scrollTrigger: { trigger: heroContent, start: 'top top', end: 'bottom top', scrub: true },
-    });
-  }
-}
-
-/* ---------------------------------------------------------------- */
-/*  Header state + scroll progress + back to top                     */
-/* ---------------------------------------------------------------- */
-function initScrollUI() {
+/* Header: solid after the first scroll, tucks away going down, returns going up */
+function initHeader() {
   const header = document.querySelector<HTMLElement>('[data-header]');
-  const bar = document.querySelector<HTMLElement>('[data-progress]');
-  const toTop = document.querySelector<HTMLElement>('[data-to-top]');
-
+  if (!header) return;
+  let last = window.scrollY;
   const onScroll = () => {
     const y = window.scrollY;
-    const h = document.documentElement.scrollHeight - window.innerHeight;
-    header?.classList.toggle('is-scrolled', y > 24);
-    if (bar) bar.style.transform = `scaleX(${h > 0 ? y / h : 0})`;
-    toTop?.classList.toggle('is-visible', y > 600);
+    header.classList.toggle('is-scrolled', y > 24);
+    document.documentElement.classList.toggle('is-past-hero', y > 320);
+    const menuOpen = document.body.classList.contains('menu-open');
+    if (!menuOpen) header.classList.toggle('is-hidden', y > 400 && y > last);
+    last = y;
   };
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
-  toTop?.addEventListener('click', () =>
-    window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' })
-  );
 }
 
-/* ---------------------------------------------------------------- */
-/*  Mobile nav toggle                                                */
-/* ---------------------------------------------------------------- */
-function initMobileNav() {
+/* Mobile menu ------------------------------------------------------------- */
+function initMenu() {
   const btn = document.querySelector<HTMLElement>('[data-nav-toggle]');
   const panel = document.querySelector<HTMLElement>('[data-nav-panel]');
+  const header = document.querySelector<HTMLElement>('[data-header]');
   if (!btn || !panel) return;
-  const close = () => {
-    panel.classList.remove('is-open');
-    btn.classList.remove('is-open');
-    document.body.style.overflow = '';
-  };
-  btn.addEventListener('click', () => {
-    const open = panel.classList.toggle('is-open');
+  const set = (open: boolean) => {
+    panel.hidden = !open;
     btn.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('menu-open', open);
     document.body.style.overflow = open ? 'hidden' : '';
-  });
-  panel.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
-}
-
-/* ---------------------------------------------------------------- */
-/*  Light / dark theme toggle                                        */
-/* ---------------------------------------------------------------- */
-function initTheme() {
-  document.querySelectorAll<HTMLElement>('[data-theme-toggle]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const light = document.documentElement.classList.toggle('light');
-      try {
-        localStorage.setItem('theme', light ? 'light' : 'dark');
-      } catch {}
-      ScrollTrigger.refresh();
-    });
-  });
-}
-
-/* ---------------------------------------------------------------- */
-/*  Auto-translate language switch (Google Translate via cookie)     */
-/* ---------------------------------------------------------------- */
-function initLang() {
-  const selects = document.querySelectorAll<HTMLSelectElement>('[data-lang]');
-  if (!selects.length) return;
-
-  const match = document.cookie.match(/googtrans=\/[^/]*\/([^;]+)/);
-  const current = match ? decodeURIComponent(match[1]) : 'en';
-  const host = location.hostname;
-
-  const clearCookie = (attrs: string) =>
-    (document.cookie = `googtrans=;${attrs};expires=Thu, 01 Jan 1970 00:00:00 GMT`);
-
-  selects.forEach((sel) => {
-    if ([...sel.options].some((o) => o.value === current)) sel.value = current;
-    sel.addEventListener('change', () => {
-      const lang = sel.value;
-      if (lang === 'en') {
-        clearCookie('path=/');
-        clearCookie(`path=/;domain=${host}`);
-        clearCookie(`path=/;domain=.${host}`);
-      } else {
-        const v = `/en/${lang}`;
-        document.cookie = `googtrans=${v};path=/`;
-        document.cookie = `googtrans=${v};path=/;domain=${host}`;
-        document.cookie = `googtrans=${v};path=/;domain=.${host}`;
-      }
-      location.reload();
-    });
-  });
+    // The panel is dark, so the bar above it reads as if over the dark hero.
+    header?.classList.toggle('menu-over', open);
+    if (open) header?.classList.remove('is-hidden');
+  };
+  btn.addEventListener('click', () => set(panel.hidden));
+  panel.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => set(false)));
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && !panel.hidden && set(false));
 }
 
 function boot() {
-  initReveals();
-  initCounters();
-  initMagnetic();
-  initTilt();
-  initParallax();
-  initScrollUI();
-  initMobileNav();
-  initTheme();
-  initLang();
-  ScrollTrigger.refresh();
+  initEntrances();
+  initStatement();
+  initRowPreview();
+  initHeader();
+  initMenu();
+  // Web fonts change heading heights; re-measure the pinned scene once they land.
+  document.fonts?.ready.then(() => ScrollTrigger.refresh());
 }
 
 if (document.readyState !== 'loading') boot();

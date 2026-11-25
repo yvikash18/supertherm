@@ -1,0 +1,33 @@
+---
+// Closing band on every page: the three ways to reach the works.
+import { company } from '../data/content';
+import Display from './Display.astro';
+interface Props { title?: string; text?: string }
+const {
+  title = 'Send us your part drawing.',
+  text = 'Tell us the part, the material and the output you need per hour. An engineer replies with a machine size and a quote.',
+} = Astro.props;
+const wa = company.phoneRaw.replace(/[^0-9]/g, '');
+---
+
+<section class="on-night enq">
+  <div class="wrap">
+    <Display text={title} class="display-xl" />
+    <div class="cols">
+      <p class="lede">{text}</p>
+      <div class="acts">
+        <a href="/contact" class="btn btn-solid">Write an enquiry</a>
+        <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" class="btn btn-line">Message on WhatsApp</a>
+        <a href={`tel:${company.phoneRaw}`} class="btn btn-line num">Call {company.phone}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .enq { padding-block: clamp(4.5rem, 10vw, 8rem); }
+  .cols { display: grid; gap: 2rem; margin-top: clamp(2rem, 4vw, 3.5rem); align-items: end; }
+  .acts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  @media (min-width: 1024px) { .cols { grid-template-columns: 1fr auto; } }
+  @media (max-width: 520px) { .acts .btn { width: 100%; } }
+</style>

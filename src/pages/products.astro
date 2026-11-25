@@ -1,183 +1,318 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
-import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
-import { company, products } from '../data/site';
-import { heroFor } from '../data/content';
+import Glyph from '../components/Glyph.astro';
+import ProcessAnim from '../components/ProcessAnim.astro';
+import type { Kind } from '../lib/process-copy';
+import Enquiry from '../components/Enquiry.astro';
+import Display from '../components/Display.astro';
+import { products, divisions } from '../data/content';
+import { company, heroFor } from '../data/content';
+import { si } from '../lib/format';
 
-const hero = heroFor('products', {
-  eyebrow: 'Our products',
-  title: 'Induction systems for every process',
-  subtitle:
-    'Four core product lines — Forge Master forging, Supertherm Scan hardening, medium-frequency melting furnaces and CFI high-frequency welders. Each engineered to your part, tonnage and cycle-time, and built in-house.',
-});
+const hero = heroFor('products');
+
+// Power range per family for the overview chart, in kW (from the published ratings).
+const ranges: Record<string, { min?: number; max: number; freq: string }> = {
+  'induction-forging': { min: 50, max: 2000, freq: '0.5–30 kHz' },
+  'induction-hardening': { min: 50, max: 300, freq: '3–400 kHz' },
+  'induction-melting-furnace': { max: 750, freq: 'Medium frequency' },
+  'high-frequency-welder': { max: 1000, freq: '150–400 kHz' },
+};
+// Log scale from 25 kW to 2000 kW
+const LO = 25, HI = 2000;
+const pos = (kw: number) => (Math.log(kw / LO) / Math.log(HI / LO)) * 100;
+const ticks = [50, 100, 250, 500, 1000, 2000];
+const chart = products
+  .filter((p) => ranges[p.slug])
+  .map((p) => {
+    const r = ranges[p.slug];
+    const left = r.min ? pos(r.min) : 0;
+    return { p, left, width: pos(r.max) - left, open: !r.min, label: r.min ? `${r.min}–${r.max} kW` : `Up to ${r.max} kW`, freq: r.freq };
+  });
 
 const site = 'https://www.superthermcorporations.com';
-// Product structured data for SEO (Google rich results / product understanding)
-const productSchema = products.map((p) => ({
+const schema = {
   '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: p.name,
-  image: site + p.image,
-  description: p.seoDescription,
-  category: 'Induction Heating Equipment',
-  brand: { '@type': 'Brand', name: company.name },
-  manufacturer: { '@type': 'Organization', name: company.name },
-  url: `${site}/products#${p.slug}`,
-  offers: {
-    '@type': 'Offer',
-    availability: 'https://schema.org/InStock',
-    priceCurrency: 'INR',
-    price: '0',
-    priceValidUntil: '2027-12-31',
-    seller: { '@type': 'Organization', name: company.name },
-  },
-}));
+  '@type': 'ItemList',
+  itemListElement: products.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': 'Product',
+      name: p.seoTitle,
+      description: p.seoDescription,
+      image: site + p.image,
+      url: `${site}/products#${p.slug}`,
+      brand: { '@type': 'Brand', name: company.name },
+      manufacturer: { '@type': 'Organization', name: company.name },
+    },
+  })),
+};
 ---
 
 <Layout
-  title="Induction Heating Machines — Forging, Hardening, Melting & HF Welding | Supertherm"
-  description="Manufacturer & supplier of induction forging machines, induction hardening machines, medium-frequency melting furnaces and high-frequency welders. IGBT power sources 50 KW–2000 KW, built in India, exported across Asia & the Gulf."
+  title={`Induction Forging, Hardening, Melting & Welding Machines | ${company.name}`}
+  description="Specifications for Supertherm induction forging machines (Forge Master I & T Series), Supertherm Scan hardening machines, medium-frequency melting furnaces and high-frequency tube welders."
+  keywords={products.flatMap((p) => p.keywords).join(', ')}
 >
-  <!-- SEO: Product structured data -->
-  {productSchema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  <PageHero title={hero.title} subtitle={hero.subtitle} />
 
-  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+  <!-- The range at a glance: one bar per family on a power scale -->
+  <section class="overview">
+    <div class="wrap">
+      <ol class="chart" data-bars>
+        {chart.map((c, i) => (
+          <li>
+            <a href={`#${c.p.slug}`} class="who">
+              <Glyph name={c.p.icon} class="glyph" />
+              <span><strong>{c.p.name}</strong><em>{c.freq}</em></span>
+            </a>
+            <div class="track">
+              {ticks.map((t) => <i style={`left:${pos(t)}%`}></i>)}
+              <span class:list={['bar-fill', c.open && 'open']} style={`left:${c.left}%;width:${c.width}%;--k:${i}`}></span>
+            </div>
+            <span class="val num">{c.label}</span>
+          </li>
+        ))}
+      </ol>
+      <div class="axis num" aria-hidden="true">
+        <span></span>
+        <div>{ticks.map((t) => <i style={`left:${pos(t)}%`}>{t}</i>)}</div>
+        <span>kW</span>
+      </div>
+    </div>
+  </section>
 
-  <!-- Sticky quick-nav -->
-  <nav aria-label="Product sections" class="sticky top-[4.75rem] z-20 border-b border-line bg-ink/85 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-7xl gap-2.5 overflow-x-auto px-5 py-3.5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {products.map((p) => (
-        <a href={`#${p.slug}`} class="inline-flex flex-none items-center gap-2 whitespace-nowrap rounded-full border border-line px-4 py-2 text-[0.85rem] text-muted transition-all duration-300 hover:border-molten-400 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-molten-500">
-          <Icon name={p.icon} class="h-4 w-4 text-molten-300" />{p.name}
-        </a>
-      ))}
+  <nav class="jump" aria-label="Machine families" data-jump>
+    <div class="wrap">
+      {products.map((p) => <a href={`#${p.slug}`} data-jump-link={p.slug}>{p.name}</a>)}
     </div>
   </nav>
 
-  {products.map((p, i) => (
-    <section id={p.slug} class:list={['scroll-mt-32 border-b border-line py-16 sm:py-20', i % 2 === 1 && 'bg-gradient-to-b from-ink-2 to-ink']}>
-      <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-        <!-- Intro: image + copy -->
-        <div class="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          <div class:list={['order-1', i % 2 === 1 ? 'lg:order-2' : 'lg:order-1']} data-reveal={i % 2 === 1 ? 'right' : 'left'}>
-            <div class="group relative aspect-[4/3] overflow-hidden rounded-3xl border border-line bg-ink-2">
-              <img src={p.image} alt={`${p.name} — ${p.series}`} width="800" height="600" loading="lazy" class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]" />
-              <div class="absolute inset-0 bg-[linear-gradient(160deg,transparent_55%,rgba(10,10,11,0.7))]"></div>
-              <span class="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-molten-300/30 bg-ink/60 backdrop-blur"><Icon name={p.icon} class="h-5 w-5 text-molten-300" /></span>
-              <span class="absolute bottom-4 left-4 rounded-full border border-line bg-ink/70 px-3.5 py-1.5 font-display text-[0.82rem] tracking-[0.03em] text-fg backdrop-blur">{p.series}</span>
+  {products.map((p) => {
+    const panels = [
+      ...p.specGroups.map((g) => ({ title: si(g.title).replace(' — ', ': '), table: g })),
+      { title: 'Engineering', meta: p.meta },
+      { title: 'Features', list: p.features },
+      { title: 'Safety and build', list: p.safety },
+      ...(((p as any).extra ?? []) as { title: string; items: string[] }[]).map((x) => ({ title: x.title, list: x.items })),
+    ] as { title: string; table?: (typeof p.specGroups)[number]; meta?: string[][]; list?: string[] }[];
+    return (
+      <section class="machine" id={p.slug} data-machine={p.name}>
+        <div class="wrap">
+          <header class="mhead">
+            <div>
+              <Display text={p.name} />
+              <p class="series">{si(p.series)}</p>
             </div>
-          </div>
+            <a class="btn btn-solid" href={`/contact?interest=${encodeURIComponent(p.name)}`}>Enquire about this machine</a>
+          </header>
 
-          <div class:list={['order-2', i % 2 === 1 ? 'lg:order-1' : 'lg:order-2']} data-reveal={i % 2 === 1 ? 'left' : 'right'}>
-            <span class="eyebrow">{p.tag}</span>
-            <h2 class="mt-3 text-[clamp(1.8rem,4vw,2.6rem)] font-bold leading-[1.1]">{p.name}</h2>
-            <p class="mt-4 max-w-prose leading-[1.75] text-muted">{p.blurb}</p>
+          <div class="stage" data-in><ProcessAnim kinds={[p.icon as Kind]} /></div>
 
-            <!-- Quick spec chips -->
-            <ul class="mt-6 flex flex-wrap gap-2">
-              {p.specs.map((s) => (
-                <li class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/[0.02] px-3 py-1.5 text-[0.82rem] font-medium text-fg">
-                  <Icon name="check" class="h-3.5 w-3.5 text-molten-400" />{s}
-                </li>
-              ))}
-            </ul>
+          <ul class="figs num">
+            {p.specs.map((x, i) => <li data-in style={`--i:${i}`}>{si(x)}</li>)}
+          </ul>
 
-            <!-- Applications -->
-            <div class="mt-6">
-              <span class="text-[0.75rem] uppercase tracking-[0.16em] text-faint">Applications</span>
-              <div class="mt-2.5 flex flex-wrap gap-2">
-                {p.applications.map((a) => (
-                  <span class="rounded-full bg-molten-500/10 px-3 py-1 text-[0.8rem] text-molten-200">{a}</span>
-                ))}
+          <div class="cols">
+            <div class="about">
+              <p class="blurb" data-in>{si(p.blurb)}</p>
+              <p class="apps" data-in><span>Used for</span> {p.applications.join(', ')}</p>
+              <div class="shots">
+                <div class="shot" data-wipe><img class="photo" src={p.image} alt={`${p.name} machine by Supertherm`} loading="lazy" width="470" height="320" /></div>
+                <div class="shot" data-wipe><img class="photo" src={p.image2} alt={`${p.name} installation`} loading="lazy" width="626" height="417" /></div>
               </div>
             </div>
 
-            <a href="/contact" class="btn btn-primary mt-7" data-magnetic="0.35">
-              Request a quote <Icon name="arrow" class="h-[1.05rem] w-[1.05rem]" />
-            </a>
+            <div class="acc">
+              {panels.map((pn, i) => (
+                <details open={i === 0} name={`acc-${p.slug}`}>
+                  <summary>{pn.title}</summary>
+                  <div class="panel">
+                    {pn.table && (
+                      <table class:list={['spec-table stack', pn.table.headers.length === 2 && 'pair']}>
+                        <thead><tr>{pn.table.headers.map((h) => <th scope="col">{h}</th>)}</tr></thead>
+                        <tbody>
+                          {pn.table.rows.map((row) => <tr>{row.map((c, ci) => <td data-label={pn.table!.headers[ci]}>{si(c)}</td>)}</tr>)}
+                        </tbody>
+                      </table>
+                    )}
+                    {pn.meta && <dl class="rows">{pn.meta.map(([k, v]) => <div class="kv"><dt>{k}</dt><dd>{si(v)}</dd></div>)}</dl>}
+                    {pn.list && <ul class="rows plain">{pn.list.map((f) => <li>{si(f)}</li>)}</ul>}
+                  </div>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
+      </section>
+    );
+  })}
 
-        <!-- Spec tables -->
-        <div class="mt-10 grid gap-6 lg:mt-14" data-reveal>
-          <h3 class="flex items-center gap-2 text-[0.8rem] uppercase tracking-[0.18em] text-faint">
-            <Icon name="chip" class="h-4 w-4 text-molten-300" /> Technical specifications
-          </h3>
-          <div class="grid gap-6 md:grid-cols-2">
-            {p.specGroups.map((g) => (
-              <div class="card overflow-hidden">
-                <div class="border-b border-line bg-white/[0.02] px-5 py-3">
-                  <h4 class="font-display text-[0.95rem] font-semibold text-fg">{g.title}</h4>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full border-collapse text-left text-[0.85rem] [font-variant-numeric:tabular-nums]">
-                    <thead>
-                      <tr>
-                        {g.headers.map((h) => (
-                          <th class="whitespace-nowrap border-b border-line px-5 py-2.5 text-[0.72rem] uppercase tracking-[0.1em] text-molten-300">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.rows.map((row) => (
-                        <tr class="transition-colors hover:bg-white/[0.02]">
-                          {row.map((cell, ci) => (
-                            <td class:list={['whitespace-nowrap border-b border-line/60 px-5 py-2.5', ci === 0 ? 'font-semibold text-fg' : 'text-muted']}>{cell}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <!-- Meta + safety + highlights -->
-        <div class="mt-6 grid gap-6 lg:grid-cols-3" data-reveal>
-          <!-- Engineering details -->
-          <div class="card p-6 lg:col-span-1">
-            <h4 class="mb-4 text-[0.78rem] uppercase tracking-[0.16em] text-faint">Engineering</h4>
-            <dl class="flex flex-col gap-3.5">
-              {p.meta.map(([k, v]) => (
-                <div class="flex flex-col gap-0.5 border-b border-line/60 pb-3 last:border-0 last:pb-0">
-                  <dt class="text-[0.8rem] text-molten-200">{k}</dt>
-                  <dd class="text-[0.9rem] leading-snug text-fg">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <!-- Safety -->
-          <div class="card p-6">
-            <h4 class="mb-4 flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.16em] text-faint">
-              <Icon name="support" class="h-4 w-4 text-molten-300" /> Safety features
-            </h4>
-            <ul class="flex flex-col gap-2.5">
-              {p.safety.map((s) => (
-                <li class="flex items-start gap-2 text-[0.9rem] text-fg"><Icon name="check" class="mt-0.5 h-4 w-4 text-molten-400" />{s}</li>
-              ))}
-            </ul>
-          </div>
-
-          <!-- Highlights -->
-          <div class="card p-6">
-            <h4 class="mb-4 flex items-center gap-2 text-[0.78rem] uppercase tracking-[0.16em] text-faint">
-              <Icon name="spark" class="h-4 w-4 text-molten-300" /> Highlights
-            </h4>
-            <ul class="flex flex-col gap-2.5">
-              {p.features.map((f) => (
-                <li class="flex items-start gap-2 text-[0.9rem] text-fg"><Icon name="spark" class="mt-0.5 h-4 w-4 text-molten-400" />{f}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
+  <section class="section range">
+    <div class="wrap">
+      <Display text="Everything the works builds" />
+      <div class="divs">
+        {divisions.map((d) => (
+          <div data-in><h3 class="h3">{d.title}</h3><ul class="rows">{d.items.map((i) => <li>{i}</li>)}</ul></div>
+        ))}
       </div>
-    </section>
-  ))}
+    </div>
+  </section>
 
-  <CtaBand title="Not sure which system fits?" text="Send us your part drawing and production targets — our engineers will recommend the right configuration." />
+  <Enquiry title="Not sure which machine fits?" text="Send the part drawing and your production target. We will recommend the configuration and quote it." />
+
+  <!-- Phones: the enquiry button follows the machine being read -->
+  <div class="mbar" data-mbar hidden>
+    <span data-mbar-name></span>
+    <a class="btn btn-solid btn-sm" data-mbar-link href="/contact">Enquire</a>
+  </div>
 </Layout>
+
+<style>
+  /* Overview chart */
+  .overview { padding-block: clamp(2rem, 5vw, 4rem); background: var(--plate); border-bottom: 1px solid var(--line); }
+  .chart li { display: grid; grid-template-columns: 1fr; gap: 0.5rem; padding-block: 1rem; border-top: 1px solid var(--line); align-items: center; }
+  .who { display: flex; align-items: center; gap: 0.9rem; }
+  .who :global(.glyph) { width: 4rem; height: auto; flex: none; }
+  .who span { display: flex; flex-direction: column; }
+  .who strong { font-stretch: 86%; font-size: 1.2rem; line-height: 1.15; }
+  .who em { font-style: normal; color: var(--fg-3); font-size: 0.9375rem; }
+  .who:hover strong { color: var(--accent); text-decoration: underline; text-underline-offset: 0.2em; }
+  .track { position: relative; height: 1.1rem; }
+  .track i { position: absolute; top: -0.35rem; bottom: -0.35rem; border-left: 1px solid var(--line); }
+  .bar-fill { position: absolute; top: 0; bottom: 0; background: var(--cab); border-radius: 1px; transform-origin: left; transition: transform 1.2s var(--ease); transition-delay: calc(var(--k) * 130ms + 250ms); }
+  /* "Up to" ranges have no stated lower end, so the bar fades in from the left */
+  .bar-fill.open { background: linear-gradient(90deg, color-mix(in srgb, var(--cab) 12%, transparent), var(--cab) 45%); }
+  .val { font-weight: 700; font-stretch: 86%; font-size: 1.1rem; }
+  .axis { display: grid; grid-template-columns: 1fr; color: var(--fg-3); font-size: 0.8125rem; border-top: 1px solid var(--line); padding-top: 0.5rem; }
+  .axis div { position: relative; height: 1.2rem; }
+  .axis i { position: absolute; font-style: normal; transform: translateX(-50%); }
+  .axis i:last-child { transform: translateX(-100%); }
+  .axis span { display: none; }
+  @media (min-width: 900px) {
+    .chart li, .axis { grid-template-columns: 19rem 1fr 9rem; gap: 2rem; }
+    .val { text-align: right; }
+    .axis span { display: block; text-align: right; }
+  }
+
+  /* Jump bar */
+  .jump { position: sticky; top: 0; z-index: 20; background: var(--floor); border-bottom: 1px solid var(--line); transition: top 0.4s var(--ease); }
+  :global(.hdr:not(.is-hidden) ~ main) .jump { top: var(--nav-h); }
+  .jump .wrap { display: flex; gap: clamp(1.25rem, 3vw, 2.5rem); overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }
+  .jump .wrap::-webkit-scrollbar { display: none; }
+  .jump a { padding-block: 0.9rem; white-space: nowrap; font-weight: 600; font-stretch: 90%; color: var(--fg-3); border-bottom: 3px solid transparent; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+  .jump a:hover { color: var(--fg); }
+  .jump a[aria-current] { color: var(--fg); border-bottom-color: var(--h900); }
+
+  /* Machine chapter */
+  .machine { padding-block: clamp(3.5rem, 8vw, 7rem); scroll-margin-top: 3rem; }
+  .machine:nth-of-type(odd) { background: var(--plate); }
+  .machine + .machine { border-top: 1px solid var(--line); }
+  .mhead { display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; justify-content: space-between; align-items: flex-end; margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+  .series { margin-top: 0.75rem; font-weight: 650; font-stretch: 88%; font-size: clamp(1.1rem, 1.6vw, 1.35rem); color: var(--cab-deep); }
+  .figs { display: grid; grid-template-columns: 1fr 1fr; margin-top: 1.5rem; }
+  .figs li { border-top: 2px solid var(--fg); padding: 0.8rem 1rem 0.8rem 0; font-weight: 700; font-stretch: 84%; font-size: clamp(1.05rem, 1.7vw, 1.5rem); line-height: 1.15; }
+  .cols { display: grid; gap: clamp(2rem, 5vw, 5rem); margin-top: clamp(2rem, 5vw, 4rem); }
+  .about { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
+  .blurb { font-size: clamp(1.1rem, 1.5vw, 1.3rem); line-height: 1.5; max-width: 36rem; }
+  .apps { font-weight: 550; }
+  .apps span { color: var(--fg-3); font-weight: 400; margin-right: 0.4rem; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .shot { aspect-ratio: 3 / 2; overflow: hidden; border-radius: 3px; }
+  @media (min-width: 720px) { .figs { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1024px) {
+    .cols { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: start; }
+    .about { position: sticky; top: calc(var(--nav-h) + 4.5rem); }
+  }
+
+  /* Detail panels: one open at a time */
+  .acc { min-width: 0; interpolate-size: allow-keywords; }
+  .acc details { border-top: 1px solid var(--fg); }
+  .acc details:last-child { border-bottom: 1px solid var(--fg); }
+  summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.1rem 0; cursor: pointer; font-weight: 700; font-stretch: 88%; font-size: 1.2rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: ''; flex: none; width: 0.9rem; height: 0.9rem; background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat, linear-gradient(currentColor, currentColor) center / 2px 100% no-repeat; transition: transform 0.35s var(--ease); }
+  details[open] > summary::after { transform: rotate(135deg); }
+  summary:hover { color: var(--accent); }
+  .acc details::details-content { block-size: 0; overflow: clip; transition: block-size 0.45s var(--ease), content-visibility 0.45s allow-discrete; }
+  .acc details[open]::details-content { block-size: auto; }
+  .panel { padding-bottom: 1.5rem; }
+  .plain li { padding-block: 0.65rem; }
+  .panel :global(.spec-table td), .panel :global(.spec-table th) { white-space: normal; }
+
+  /* Phones: each table row becomes a labelled block instead of a sideways scroll */
+  @media (max-width: 640px) {
+    .stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .stack, .stack tbody { display: block; }
+    .stack tr { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 1rem; padding-block: 0.9rem; border-bottom: 1px solid var(--line); }
+    .stack td { display: flex; flex-direction: column; padding: 0; border: 0; white-space: normal; }
+    .stack td::before { content: attr(data-label); font-size: 0.8125rem; font-weight: 400; color: var(--fg-3); }
+    .stack td:first-child { grid-column: 1 / -1; font-size: 1.15rem; font-stretch: 88%; }
+    /* Two-column tables are already label and value */
+    .stack.pair tr { grid-template-columns: 1fr; gap: 0.1rem; padding-block: 0.7rem; }
+    .stack.pair td::before { content: none; }
+    .stack.pair td:first-child { font-size: 0.875rem; font-weight: 400; color: var(--fg-3); font-stretch: 100%; }
+    .stack.pair td:last-child { font-weight: 650; }
+    .mhead .btn { display: none; }
+    .machine { scroll-margin-top: 2.5rem; }
+  }
+
+  /* Division lists */
+  .range { border-top: 1px solid var(--line); }
+  .divs { display: grid; gap: 2.5rem; margin-top: clamp(2rem, 4vw, 3.5rem); }
+  .divs h3 { margin-bottom: 0.9rem; }
+  .divs li { padding-block: 0.7rem; font-weight: 550; }
+  @media (min-width: 800px) { .divs { grid-template-columns: 1fr 1fr; gap: 5rem; } }
+
+  /* Phone enquiry bar */
+  .mbar { position: fixed; inset: auto 0 0 0; z-index: 35; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem var(--pad); padding-bottom: calc(0.6rem + env(safe-area-inset-bottom)); background: var(--night); color: #e7eae7; --btn-bg: #e7eae7; --btn-fg: var(--steel); --btn-bg-hover: #fff; transform: translateY(0); transition: transform 0.35s var(--ease); }
+  .mbar[hidden] { display: flex; transform: translateY(110%); visibility: hidden; transition: transform 0.35s var(--ease), visibility 0s 0.35s; }
+  .mbar span { font-weight: 700; font-stretch: 86%; line-height: 1.15; min-width: 0; }
+  @media (min-width: 641px) { .mbar { display: none !important; } }
+  @media (max-width: 640px) { :global(body.has-mbar .wa) { bottom: 4.75rem; } }
+</style>
+
+<script>
+  // Follow the machine being read: mark it in the jump bar and on the phone enquiry bar.
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-machine]'));
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-jump-link]'));
+  const bar = document.querySelector<HTMLElement>('[data-mbar]');
+  const barName = document.querySelector<HTMLElement>('[data-mbar-name]');
+  const barLink = document.querySelector<HTMLAnchorElement>('[data-mbar-link]');
+  const rail = document.querySelector<HTMLElement>('[data-jump] .wrap');
+  let current = '';
+
+  const set = (id: string) => {
+    if (id === current) return;
+    current = id;
+    const sec = sections.find((s) => s.id === id);
+    links.forEach((a) => {
+      const on = a.dataset.jumpLink === id;
+      if (on) {
+        a.setAttribute('aria-current', 'true');
+        // Keep the active name in view on narrow screens
+        rail?.scrollTo({ left: a.offsetLeft - rail.clientWidth / 2 + a.clientWidth / 2 });
+      } else a.removeAttribute('aria-current');
+    });
+    if (bar) bar.hidden = !sec;
+    document.body.classList.toggle('has-mbar', !!sec);
+    if (sec && barName && barLink) {
+      barName.textContent = sec.dataset.machine || '';
+      barLink.href = `/contact?interest=${encodeURIComponent(sec.dataset.machine || '')}`;
+    }
+  };
+
+  const visible = new Set<string>();
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => (e.isIntersecting ? visible.add(e.target.id) : visible.delete(e.target.id)));
+      // The section crossing the middle of the screen is the one being read
+      set(sections.find((s) => visible.has(s.id))?.id ?? '');
+    },
+    { rootMargin: '-45% 0px -50% 0px' }
+  );
+  sections.forEach((s) => io.observe(s));
+</script>

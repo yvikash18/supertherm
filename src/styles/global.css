@@ -1,374 +1,274 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/*  Supertherm design tokens — dark industrial + molten glow          */
+/*  Supertherm v2 tokens                                               */
+/*  Ground and blue are taken from the machines themselves: light-grey */
+/*  cabinet enamel and the blue of the doors and control panels.       */
+/*  The heat ramp is the colour of steel at temperature and is used    */
+/*  only where something is hot. Dark ground appears only around hot   */
+/*  metal (hero, sizing tool) and in the footer.                       */
 /* ------------------------------------------------------------------ */
 :root {
-  /* Semantic colors as RGB triplets (space-separated) so Tailwind utilities
-     support opacity modifiers, e.g. bg-ink/70. Themed by overriding these. */
-  --c-ink: 10 10 11;
-  --c-ink-2: 16 16 19;
-  --c-ink-3: 22 22 27;
-  --c-panel: 27 27 33;
-  --c-line: 38 38 46;
+  --floor: #e7eae7;
+  --plate: #f4f6f3;
+  --rule: #c3c9c4;
+  --steel: #131c26;
+  --steel-2: #46525e;
+  --steel-3: #5f6b76;
 
-  --c-fg: 244 244 246;
-  --c-muted: 160 160 171;
-  --c-faint: 108 108 120;
+  --cab: #1f5fd0;
+  --cab-deep: #174aa6;
 
-  /* Molten accent ramp (constant across themes — brand) */
-  --c-molten-50: 255 245 236;
-  --c-molten-100: 255 230 204;
-  --c-molten-200: 255 196 135;
-  --c-molten-300: 255 157 61;
-  --c-molten-400: 255 122 24;
-  --c-molten-500: 247 93 2;
-  --c-molten-600: 214 63 0;
-  --c-molten-700: 166 44 0;
-  --c-ember: 255 179 71;
+  --night: #0c141c;
+  --night-2: #141e29;
 
-  /* Hex-style aliases for the component CSS in @layer components / scoped styles */
-  --color-ink: rgb(var(--c-ink));
-  --color-ink-2: rgb(var(--c-ink-2));
-  --color-ink-3: rgb(var(--c-ink-3));
-  --color-panel: rgb(var(--c-panel));
-  --color-line: rgb(var(--c-line));
-  --color-fg: rgb(var(--c-fg));
-  --color-muted: rgb(var(--c-muted));
-  --color-faint: rgb(var(--c-faint));
-  --color-molten-50: rgb(var(--c-molten-50));
-  --color-molten-100: rgb(var(--c-molten-100));
-  --color-molten-200: rgb(var(--c-molten-200));
-  --color-molten-300: rgb(var(--c-molten-300));
-  --color-molten-400: rgb(var(--c-molten-400));
-  --color-molten-500: rgb(var(--c-molten-500));
-  --color-molten-600: rgb(var(--c-molten-600));
-  --color-molten-700: rgb(var(--c-molten-700));
-  --color-ember: rgb(var(--c-ember));
+  --copper: #c0703e;
+  --h500: #6b1a12;
+  --h700: #c22d17;
+  --h900: #f25c0f;
+  --h1100: #ffa826;
+  --h1250: #ffe7a3;
 
-  /* Fonts */
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Contextual: flipped inside .on-night */
+  --bg: var(--floor);
+  --fg: var(--steel);
+  --fg-2: var(--steel-2);
+  --fg-3: var(--steel-3);
+  --line: var(--rule);
+  --accent: var(--cab);
+  --btn-bg: var(--cab);
+  --btn-fg: #fff;
+  --btn-bg-hover: var(--cab-deep);
 
-  /* Easing */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-
-  color-scheme: dark;
-}
-
-/* Light theme — surfaces & text flip; molten accent stays. */
-html.light {
-  --c-ink: 255 255 255;
-  --c-ink-2: 247 248 250;
-  --c-ink-3: 240 242 246;
-  --c-panel: 255 255 255;
-  --c-line: 224 227 233;
-
-  --c-fg: 22 24 30;
-  --c-muted: 82 90 104;
-  --c-faint: 128 136 150;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --pad: clamp(1.25rem, 4vw, 3.5rem);
+  --nav-h: 4.5rem;
 
   color-scheme: light;
 }
 
-/* Sections that always sit on dark imagery keep light text in BOTH themes.
-   Also set `color` here so headings with no explicit text utility (which inherit
-   the body's computed color) stay light instead of turning dark in light mode. */
-[data-ondark] {
-  --c-fg: 244 244 246;
-  --c-muted: 202 202 212;
-  --c-faint: 150 150 162;
-  --c-line: 60 60 70;
-  color: rgb(var(--c-fg));
+.on-night {
+  --bg: var(--night);
+  --fg: #e7eae7;
+  --fg-2: #a9b4be;
+  --fg-3: #8794a0;
+  --line: #2a3644;
+  --accent: #8fb6ff;
+  --btn-bg: #e7eae7;
+  --btn-fg: var(--steel);
+  --btn-bg-hover: #fff;
+  background: var(--bg);
+  color: var(--fg);
 }
 
-/* Transparent top bar sits over the dark hero → keep its text light until
-   scrolled. Scoped to [data-topbar] only, so the open mobile panel (which has
-   its own solid background) keeps normal theme contrast. */
-[data-header]:not(.is-scrolled) [data-topbar] {
-  --c-fg: 244 244 246;
-  --c-muted: 202 202 212;
-  --c-faint: 150 150 162;
-  --c-line: 60 60 70;
-  color: rgb(var(--c-fg));
+@view-transition {
+  navigation: auto;
 }
 
-/* Theme-toggle icon: show sun in dark, moon in light */
-html:not(.light) [data-theme-icon='moon'] { display: none; }
-html.light [data-theme-icon='sun'] { display: none; }
-
-/* Google Translate — hide the injected banner/gadget; we drive it from our dropdown */
-#google_translate_element { display: none !important; }
-.goog-te-banner-frame,
-.goog-te-gadget-icon,
-.goog-logo-link,
-.goog-te-balloon-frame { display: none !important; }
-.goog-te-gadget { height: 0; overflow: hidden; }
-body { top: 0 !important; position: static !important; }
-.goog-text-highlight { background: none !important; box-shadow: none !important; }
-.skiptranslate iframe { display: none !important; }
-
-/* ------------------------------------------------------------------ */
-/*  Base                                                              */
-/* ------------------------------------------------------------------ */
 @layer base {
   html {
-    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* clip (not hidden) prevents horizontal scroll without breaking position:sticky */
     overflow-x: clip;
+    scroll-padding-top: calc(var(--nav-h) + 1rem);
   }
 
   body {
-    background-color: var(--color-ink);
-    color: var(--color-fg);
-    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    font-optical-sizing: auto;
     overflow-x: clip;
-    max-width: 100%;
   }
 
-  ::selection {
-    background: var(--color-molten-500);
-    color: #fff;
+  ::selection { background: var(--h1100); color: var(--steel); }
+
+  h1, h2, h3, h4 { font-weight: 700; line-height: 1.1; text-wrap: balance; }
+  p { text-wrap: pretty; }
+
+  a { color: inherit; text-decoration: none; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
 
-  h1, h2, h3, h4, h5 {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
-  }
-
-  /* Native select dropdown options — keep them readable on the dark theme.
-     Without this, light-inherited text renders light-on-white (invisible). */
-  select option {
-    background-color: var(--color-ink-2);
-    color: var(--color-fg);
-  }
-  select:invalid,
-  select option[value=''] {
-    color: var(--color-faint);
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 10px; }
-  ::-webkit-scrollbar-track { background: var(--color-ink); }
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(var(--color-molten-600), var(--color-molten-400));
-    border-radius: 99px;
-  }
+  select option { background: var(--plate); color: var(--steel); }
+  img { max-width: 100%; }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Reusable component utilities                                       */
-/* ------------------------------------------------------------------ */
 @layer components {
-  .container-x {
+  .wrap {
     width: 100%;
-    max-width: 80rem;
+    max-width: 90rem;
     margin-inline: auto;
-    padding-inline: 1.5rem;
+    padding-inline: var(--pad);
   }
 
-  .text-gradient {
-    background: linear-gradient(120deg, var(--color-molten-300), var(--color-ember) 40%, var(--color-molten-500));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .section { padding-block: clamp(4.5rem, 10vw, 9rem); }
+  .section-tight { padding-block: clamp(3rem, 6vw, 5rem); }
+
+  /* Display type: the condensed heavy cut, set like the lettering on a machine nameplate */
+  .display {
+    font-stretch: 68%;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.012em;
+    font-size: clamp(2.75rem, 8.2vw, 7.25rem);
+    text-wrap: balance;
   }
+  .display-xl { font-size: clamp(3.1rem, 11.6vw, 11.5rem); line-height: 0.86; }
+  .display-sm { font-size: clamp(2rem, 4.6vw, 3.75rem); line-height: 0.94; }
+
+  .lede {
+    font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--fg-2);
+    max-width: 38em;
+  }
+
+  .h3 { font-size: 1.375rem; font-stretch: 88%; font-weight: 700; letter-spacing: -0.005em; }
+  .small { font-size: 0.875rem; line-height: 1.45; }
+  .note { font-size: 0.875rem; line-height: 1.45; color: var(--fg-3); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Figures: big condensed numerals for ratings */
+  .figure {
+    font-stretch: 68%;
+    font-weight: 800;
+    line-height: 0.9;
+    font-size: clamp(2.25rem, 4.4vw, 4rem);
+    font-variant-numeric: tabular-nums;
+  }
+  .figure small { font-size: 0.42em; font-weight: 700; font-stretch: 80%; margin-left: 0.18em; }
+
+  .link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-thickness 0.15s;
+  }
+  .link:hover { text-decoration-thickness: 2px; }
 
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding: 0.9rem 1.6rem;
-    border-radius: 999px;
-    transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo), background 0.3s;
-    will-change: transform;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0.7rem 1.35rem;
+    border-radius: 3px;
+    font-weight: 650;
+    font-stretch: 92%;
+    font-size: 1rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.18s, color 0.18s, border-color 0.18s;
   }
+  .btn-solid { background: var(--btn-bg); color: var(--btn-fg); }
+  .btn-solid:hover { background: var(--btn-bg-hover); }
+  .btn-line { border: 1px solid var(--fg); color: var(--fg); }
+  .btn-line:hover { background: var(--fg); color: var(--bg); }
+  .btn-sm { min-height: 2.5rem; padding: 0.5rem 1rem; font-size: 0.9375rem; }
 
-  .btn-primary {
-    color: #1a0a00;
-    background: linear-gradient(120deg, var(--color-molten-300), var(--color-molten-500));
-    box-shadow: 0 10px 30px -10px rgba(247, 93, 2, 0.6);
-  }
-  .btn-primary:hover {
-    box-shadow: 0 16px 45px -8px rgba(247, 93, 2, 0.75);
-  }
+  /* Plain rules-and-columns data layout */
+  .rows > * { border-top: 1px solid var(--line); }
+  .rows > *:last-child { border-bottom: 1px solid var(--line); }
 
-  .btn-ghost {
-    /* read --c-fg directly (not the root-resolved alias) so it responds to
-       [data-ondark] on the hero and to the light/dark theme */
-    color: rgb(var(--c-fg));
-    border: 1px solid rgb(var(--c-line));
-    background: rgba(255, 255, 255, 0.02);
-  }
-  .btn-ghost:hover {
-    border-color: var(--color-molten-400);
-    color: var(--color-molten-200);
-  }
+  .kv { display: grid; grid-template-columns: minmax(8rem, 0.8fr) 2fr; gap: 0.25rem 1.5rem; padding-block: 0.8rem; }
+  .kv dt { color: var(--fg-3); font-size: 0.9375rem; }
+  .kv dd { font-weight: 550; }
+  @media (max-width: 520px) { .kv { grid-template-columns: 1fr; } }
 
-  /* Glass / bordered card surface */
-  .card {
-    position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
-    border: 1px solid var(--color-line);
-    border-radius: 1.25rem;
-    overflow: hidden;
+  .spec-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .spec-table caption { text-align: left; font-weight: 700; font-stretch: 88%; font-size: 1.125rem; padding-bottom: 0.75rem; }
+  .spec-table th {
+    text-align: left; font-weight: 500; font-size: 0.875rem; color: var(--fg-3);
+    padding: 0.55rem 1rem 0.55rem 0; border-bottom: 1px solid var(--fg); white-space: nowrap;
   }
+  .spec-table td { padding: 0.7rem 1rem 0.7rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .spec-table td:first-child { font-weight: 650; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-  .card-glow::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(130deg, transparent 40%, var(--color-molten-400), transparent 70%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.5s;
-    /* Decorative border-glow must never intercept clicks on card content */
-    pointer-events: none;
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field label { font-size: 0.9375rem; font-weight: 600; }
+  .input {
+    width: 100%;
+    background: #fcfdfb;
+    border: 1px solid var(--steel-3);
+    border-radius: 3px;
+    padding: 0.8rem 0.9rem;
+    font: inherit;
+    color: var(--steel);
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .card-glow:hover::before { opacity: 1; }
+  .input::placeholder { color: #8a949d; }
+  .input:focus { outline: none; border-color: var(--cab); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cab) 22%, transparent); }
 
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--color-molten-300);
-  }
-  .eyebrow::before {
-    content: '';
-    width: 1.75rem;
-    height: 1px;
-    background: linear-gradient(90deg, var(--color-molten-500), transparent);
-  }
+  .photo { display: block; width: 100%; height: 100%; object-fit: cover; background: var(--rule); }
 
-  /* Subtle grid / noise backdrop */
-  .bg-grid {
-    background-image:
-      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
-    background-size: 56px 56px;
-  }
-
-  .heat-underline {
-    position: relative;
-  }
-  .heat-underline::after {
-    content: '';
-    position: absolute;
-    left: 0; bottom: -6px;
-    height: 3px; width: 0;
-    background: linear-gradient(90deg, var(--color-molten-400), var(--color-ember));
-    border-radius: 2px;
-    transition: width 0.4s var(--ease-out-expo);
-  }
-  .heat-underline:hover::after { width: 100%; }
+  /* Kept for the standalone /admin console */
+  .card { background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Animation primitives (driven by IntersectionObserver in Layout)   */
+/*  Motion                                                             */
+/*  Guarded behind html.js so nothing is hidden if scripts fail.       */
 /* ------------------------------------------------------------------ */
-/* Guarded behind html.js so content stays visible if JS fails to load */
-.js [data-reveal] {
+
+/* Word-by-word masked rise for display type (see components/Display.astro) */
+.rise .w { display: inline-block; overflow: clip; overflow-clip-margin: 0.06em; vertical-align: top; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.rise .w > span { display: inline-block; }
+.js .rise .w > span {
+  transform: translateY(108%);
+  transition: transform 0.9s var(--ease);
+  transition-delay: calc(var(--d, 0ms) + var(--i) * 55ms);
+}
+.js .rise.is-in .w > span { transform: none; }
+
+/* Blur-in for photos, rows and blocks */
+.js [data-in] {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
-  transition-delay: var(--reveal-delay, 0ms);
+  filter: blur(10px);
+  transform: translateY(14px);
+  transition: opacity 0.7s ease, filter 0.7s ease, transform 0.9s var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
 }
-.js [data-reveal].is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-.js [data-reveal='scale'] { transform: scale(0.94); }
-.js [data-reveal='scale'].is-visible { transform: scale(1); }
-.js [data-reveal='left'] { transform: translateX(-40px); }
-.js [data-reveal='left'].is-visible { transform: translateX(0); }
-.js [data-reveal='right'] { transform: translateX(40px); }
-.js [data-reveal='right'].is-visible { transform: translateX(0); }
+.js [data-in].is-in { opacity: 1; filter: none; transform: none; }
 
-/* Molten glow blobs */
-@keyframes float-glow {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(0, -24px, 0) scale(1.08); }
-}
-.glow-blob {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(70px);
-  opacity: 0.55;
-  animation: float-glow 12s ease-in-out infinite;
-  pointer-events: none;
-}
+/* Photo wipe: the frame opens left to right. The clip sits on the child so the
+   observed element keeps its box. */
+.js [data-wipe] > * { clip-path: inset(0 100% 0 0); transform: scale(1.1); transition: clip-path 1.1s var(--ease), transform 1.5s var(--ease); }
+.js [data-wipe].is-in > * { clip-path: inset(0); transform: none; }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.7; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
+/* Bars in the fuel comparison grow from zero */
+.js [data-bars] .bar-fill { transform: scaleX(0); }
+.js [data-bars].is-in .bar-fill { transform: scaleX(1); }
 
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+/* Photo that follows the pointer over a machine row (built in scripts/motion.ts) */
+.row-preview {
+  position: fixed; left: 0; top: 0; z-index: 30; width: 19rem; aspect-ratio: 3 / 2; margin: -6.5rem 0 0 2rem;
+  pointer-events: none; overflow: hidden; border-radius: 3px; background: var(--rule);
+  clip-path: inset(0 0 100% 0); transition: clip-path 0.45s var(--ease);
 }
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 32s linear infinite;
-}
-.marquee-track:hover { animation-play-state: paused; }
-
-@keyframes shimmer {
-  100% { transform: translateX(100%); }
-}
-
-@keyframes ken-burns {
-  from { transform: scale(1.05); }
-  to { transform: scale(1.16); }
-}
-
-@keyframes scroll-cue {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(14px); opacity: 0; }
-}
-
-/* Hero banner crossfade slides */
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transform: scale(1.05);
-  transition: opacity 1.4s ease;
-}
-.hero-slide.active {
-  opacity: 1;
-  animation: ken-burns 8s ease-out forwards;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-slide.active { animation: none; transform: scale(1.05); }
-}
+.row-preview.is-on { clip-path: inset(0); }
+.row-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    transition-delay: 0ms !important;
   }
-  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  @view-transition { navigation: none; }
 }

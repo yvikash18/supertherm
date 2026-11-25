@@ -13,3 +13,11 @@
 # Media assets — cache a day
 /assets/*
   Cache-Control: public, max-age=86400
+
+# Content console — never cached, never indexed
+/admin
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store

@@ -1,263 +1,300 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import EmberField from '../components/EmberField.astro';
-import StatStrip from '../components/StatStrip.astro';
-import SectionHeading from '../components/SectionHeading.astro';
-import ProductCard from '../components/ProductCard.astro';
-import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
-import {
-  company,
-  products,
-  capabilities,
-  advantages,
-  process,
-  countries,
-  clientLogos,
-  testimonials,
-  heroBanners,
-  aboutImages,
-} from '../data/site';
+import Display from '../components/Display.astro';
+import HeatLine from '../components/HeatLine.astro';
+import Plate from '../components/Plate.astro';
+import Glyph from '../components/Glyph.astro';
+import SizingTool from '../components/SizingTool.astro';
+import Compare from '../components/Compare.astro';
+import ProcessAnim from '../components/ProcessAnim.astro';
+import Enquiry from '../components/Enquiry.astro';
+import { products, process, countries, clientLogos, branches, aboutImages, advantages, testimonials, divisions } from '../data/content';
+import { company } from '../data/content';
+import { si, tel } from '../lib/format';
+
+const { noindex = false } = Astro.props;
+
+const statement =
+  'An induction coil never touches the metal: the steel heats itself. No flame, no warm-up, every billet the same. More than 1000 Supertherm machines run across nine countries.';
 ---
 
 <Layout
-  title="Supertherm Corporations — Induction Forging, Hardening, Melting & Welding Machines"
+  darkHero
+  noindex={noindex}
+  title="Supertherm Corporations | Induction Forging, Hardening, Melting & Welding Machines"
   description="Supertherm Corporations is a leading manufacturer & supplier of induction heating equipment — induction forging machines, hardening systems, medium-frequency melting furnaces and high-frequency welders. 30+ years, 1000+ machines delivered across Asia & the Gulf."
 >
-  <!-- ============ HERO ============ -->
-  <section data-ondark class="relative flex min-h-[100svh] items-center overflow-hidden">
-    <div class="absolute inset-0 z-0">
-      <div class="absolute inset-0" data-hero-carousel>
-        {heroBanners.map((src, i) => (
-          <div class:list={['hero-slide', { active: i === 0 }]} style={`background-image:url(${src})`} />
-        ))}
-      </div>
-      <div class="absolute inset-0 bg-gradient-to-br from-molten-700/35 to-ink/25 mix-blend-multiply"></div>
-      <EmberField class="z-[1] opacity-85" />
-      <div class="glow-blob" style="width:600px;height:600px;background:#d63f00;left:8%;top:10%;opacity:0.22"></div>
-      <div class="glow-blob" style="width:420px;height:420px;background:#ff9d3d;right:6%;bottom:6%;opacity:0.16;animation-delay:-4s"></div>
-      <!-- vignette for text legibility -->
-      <div
-        class="absolute inset-0 bg-[linear-gradient(90deg,#0a0a0b_2%,rgba(10,10,11,0.4)_45%,transparent_75%),linear-gradient(0deg,#0a0a0b_4%,transparent_40%),radial-gradient(120%_90%_at_50%_30%,transparent_45%,#0a0a0b_96%)]"
-      >
-      </div>
-    </div>
-
-    <div class="relative z-[2] mx-auto w-full max-w-7xl px-5 pb-16 pt-24 sm:px-6" data-hero-content>
-      <span
-        class="inline-flex items-center gap-2.5 rounded-full border border-line bg-white/[0.03] px-4 py-2 text-[0.82rem] text-muted"
-        data-reveal
-      >
-        <span class="h-2 w-2 rounded-full bg-molten-400 shadow-[0_0_12px_2px_theme(colors.molten.400)]"></span>
-        Manufacturing excellence since {company.established}
-      </span>
-
-      <h1 class="mt-6 max-w-[18ch] text-[clamp(2.8rem,8vw,5.5rem)] font-bold leading-[1.02]">
-        <span class="block" data-reveal>Precision heat,</span>
-        <span class="text-gradient block" data-reveal style="--reveal-delay:120ms">forged into power.</span>
-      </h1>
-
-      <p class="mt-6 max-w-[40rem] text-[1.15rem] leading-7 text-muted" data-reveal style="--reveal-delay:240ms">
-        {company.name} engineers world-class induction systems — hardening, forging, melting and
-        high-frequency welding — built for the modern foundry and shop floor.
-      </p>
-
-      <div class="mt-9 flex flex-wrap gap-4" data-reveal style="--reveal-delay:340ms">
-        <a href="/products" class="btn btn-primary" data-magnetic="0.4">
-          Explore Products <Icon name="arrow" class="h-[1.15rem] w-[1.15rem]" />
-        </a>
-        <a href="/contact" class="btn btn-ghost" data-magnetic="0.3">Talk to an Engineer</a>
-      </div>
-
-      <div class="mt-12 flex flex-wrap gap-x-8 gap-y-4" data-reveal style="--reveal-delay:440ms">
-        {[
-          { icon: 'chip', label: 'IGBT up to 750 KW' },
-          { icon: 'clock', label: '24/7 support' },
-          { icon: 'globe', label: '9 countries served' },
-        ].map((m) => (
-          <div class="flex items-center gap-2 text-[0.9rem] text-muted">
-            <Icon name={m.icon} class="h-5 w-5 text-molten-300" /><span>{m.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <a
-      href="#products"
-      class="absolute bottom-7 left-1/2 z-[2] grid h-[42px] w-[26px] -translate-x-1/2 place-items-start justify-items-center rounded-full border-2 border-line pt-2"
-      aria-label="Scroll down"
-    >
-      <span class="h-2 w-1 animate-[scroll-cue_1.6s_infinite] rounded-full bg-molten-400"></span>
-    </a>
-  </section>
-
-  <StatStrip />
-
-  <!-- ============ PRODUCTS ============ -->
-  <section id="products" class="py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading eyebrow="What we build" title="Induction systems, <span class='text-gradient'>engineered end to end</span>">
-        From a single hardening station to a turnkey foundry, every machine is designed, built and
-        commissioned in-house.
-      </SectionHeading>
-
-      <div class="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((p, i) => <ProductCard product={p} index={i} />)}
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ CAPABILITIES ============ -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto grid w-full max-w-7xl gap-12 px-5 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-      <div>
-        <SectionHeading eyebrow="Capabilities" title="One partner for<br />every heating process">
-          Whatever the metallurgy, we have the coil, power source and automation to match.
-        </SectionHeading>
-        <a href="/products" class="btn btn-ghost mt-8" data-magnetic="0.3">
-          See all products <Icon name="arrow" class="h-[1.15rem] w-[1.15rem]" />
-        </a>
-        <div class="relative mt-9 aspect-[16/10] overflow-hidden rounded-2xl border border-line" data-reveal="scale">
-          <img
-            src={aboutImages.capability}
-            alt="Supertherm induction equipment"
-            loading="lazy"
-            class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105"
-          />
-          <div class="absolute bottom-4 left-4 flex items-center gap-2 rounded-full border border-line bg-ink/70 px-4 py-2 text-[0.82rem] font-medium backdrop-blur">
-            <Icon name="chip" class="h-[1.1rem] w-[1.1rem] text-molten-300" /><span>In-house manufacturing</span>
-          </div>
+  <!-- Hero: the line running -->
+  <section class="on-night hero">
+    <div class="wrap top">
+      <Display as="h1" text="Induction heat for forging, hardening, melting and welding." class="display-xl" onload delay={150} />
+      <div class="sub" data-in style="--i:8">
+        <p class="lede">Machines from 50 to 2000 kW, designed and built at our works in Bahadurgarh, Haryana for more than 30 years.</p>
+        <div class="acts">
+          <a href="#size" class="btn btn-solid">Find your machine</a>
+          <a href={`tel:${company.phoneRaw}`} class="btn btn-line num">Call {company.phone}</a>
         </div>
       </div>
+    </div>
+    <HeatLine />
+  </section>
 
-      <div class="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-        {capabilities.map((c, i) => (
-          <div class="bg-ink p-[1.9rem] transition-colors duration-300 hover:bg-ink-3" data-reveal style={`--reveal-delay:${i * 60}ms`}>
-            <Icon name="spark" class="h-6 w-6 text-molten-300" />
-            <h3 class="mt-4 text-[1.15rem]">{c.title}</h3>
-            <p class="mt-2 text-[0.92rem] leading-[1.6] text-muted">{c.text}</p>
-          </div>
+  <!-- What induction is, in one pass -->
+  <section class="statement" data-statement>
+    <div class="wrap">
+      <p>{statement.split(' ').map((w) => (<><span class="sw">{w}</span>{' '}</>))}</p>
+      <div class="gauge" aria-hidden="true"><span></span></div>
+    </div>
+  </section>
+
+  <Plate />
+
+  <!-- Machines -->
+  <section class="section" id="machines">
+    <div class="wrap">
+      <div class="head">
+        <Display text="Four machine families" />
+        <p class="lede" data-in>Each one is engineered to the part: coil, power source, handling and controls come from the same works.</p>
+      </div>
+      <ul class="rows machines">
+        {products.map((p, i) => (
+          <li data-in style={`--i:${i}`}>
+            <a href={`/products#${p.slug}`} data-preview={p.image}>
+              <Glyph name={p.icon} class="glyph" />
+              <div class="name">
+                <h3 class="display display-sm">{p.name}</h3>
+                <p>{si(p.series)}</p>
+              </div>
+              <ul class="specs num">{p.specs.slice(0, 2).map((s) => <li>{si(s)}</li>)}</ul>
+              <span class="go">Specifications</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Everything the two divisions build -->
+  <section class="section-tight range">
+    <div class="wrap">
+      <div class="divs">
+        {divisions.map((d, i) => (
+          <div data-in style={`--i:${i}`}><h3 class="h3">{d.title}</h3><ul>{d.items.map((x) => <li>{x}</li>)}</ul></div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- ============ PROCESS ============ -->
-  <section class="py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading align="center" eyebrow="How we work" title="From brief to <span class='text-gradient'>running line</span>">
-        A proven four-step path that de-risks your investment.
-      </SectionHeading>
-
-      <div class="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {process.map((p, i) => (
-          <div
-            class="rounded-2xl border border-line bg-gradient-to-b from-white/[0.03] to-transparent p-7"
-            data-reveal
-            style={`--reveal-delay:${i * 100}ms`}
-          >
-            <div class="font-display text-[2.4rem] font-bold text-transparent [-webkit-text-stroke:1.5px_theme(colors.molten.500)]">{p.step}</div>
-            <h3 class="mt-3 text-[1.2rem]">{p.title}</h3>
-            <p class="mt-2 text-[0.92rem] leading-[1.6] text-muted">{p.text}</p>
-          </div>
-        ))}
+  <!-- The four processes, animated (stands in for the process video on the old site) -->
+  <section class="section">
+    <div class="wrap">
+      <div class="head">
+        <Display text="The work, as it happens" />
+        <p class="lede" data-in>What each machine does to the steel, drawn step by step. Pick a process. <a class="link" href="/products">Machine specifications</a></p>
       </div>
+      <div data-in><ProcessAnim kinds={['hardening', 'forge', 'melt', 'weld']} /></div>
     </div>
   </section>
 
-  <!-- ============ ADVANTAGES ============ -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading eyebrow="Why Supertherm" title="Built to run, backed for life">
-        Thirty years of field experience baked into every machine — and a team that stays with you
-        long after commissioning.
-      </SectionHeading>
+  <!-- Sizing tool -->
+  <section class="section size" id="size">
+    <div class="wrap">
+      <div class="head">
+        <Display text="Size it by the bar" />
+        <p class="lede" data-in>Frequency decides how deep the current heats. Thin bar needs high frequency, heavy billet needs low. Drag to your diameter.</p>
+      </div>
+      <div data-in><SizingTool /></div>
+    </div>
+  </section>
 
-      <div class="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+  <!-- Against fuel-fired furnaces -->
+  <section class="section">
+    <div class="wrap split">
+      <div class="head stick">
+        <Display text="Against oil and gas" />
+        <p class="lede" data-in>What changes when a forge shop replaces a fuel-fired furnace with an induction billet heater.</p>
+        <p class="note" data-in>Supertherm figures for billet heating, with electricity at ₹7 per unit.</p>
+      </div>
+      <Compare />
+    </div>
+  </section>
+
+  <!-- From enquiry to running line -->
+  <section class="section works">
+    <div class="wrap">
+      <div class="head two">
+        <Display text="From drawing to running line" />
+        <div class="shot" data-wipe><img class="photo" src={aboutImages.capability} alt="A Supertherm billet heater with its control cabinet on the works floor" loading="lazy" width="1200" height="900" /></div>
+      </div>
+      <ol class="steps">
+        {process.map((s, i) => (
+          <li data-in style={`--i:${i}`}>
+            <span class="figure num">{i + 1}</span>
+            <h3 class="h3">{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- After delivery -->
+  <section class="section-tight after">
+    <div class="wrap">
+      <ul class="trio">
         {advantages.map((a, i) => (
-          <div class="card card-glow p-8" data-tilt data-reveal style={`--reveal-delay:${i * 80}ms`}>
-            <span class="grid h-[3.2rem] w-[3.2rem] place-items-center rounded-[0.9rem] border border-molten-300/[0.22] bg-gradient-to-br from-molten-300/[0.16] to-molten-500/[0.06]">
-              <Icon name={a.icon} class="h-[1.7rem] w-[1.7rem] text-molten-300" />
-            </span>
-            <h3 class="mt-5 text-[1.2rem]">{a.title}</h3>
-            <p class="mt-2.5 text-[0.93rem] leading-[1.65] text-muted">{a.text}</p>
-          </div>
+          <li data-in style={`--i:${i}`}><h3 class="h3">{a.title}</h3><p>{a.text}</p></li>
         ))}
-      </div>
+      </ul>
     </div>
   </section>
 
-  <!-- ============ GLOBAL REACH ============ -->
-  <section class="overflow-hidden py-24">
-    <div class="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 sm:px-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div>
-        <SectionHeading eyebrow="Global footprint" title="Trusted across <span class='text-gradient'>Asia & the Gulf</span>">
-          More than 1000 machines delivered and running across nine countries — and counting.
-        </SectionHeading>
-        <div class="mt-8 flex flex-wrap gap-2.5" data-reveal>
-          {countries.map((c) => (
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-[0.88rem] text-muted transition-all duration-300 hover:border-molten-400 hover:text-fg">
-              <Icon name="pin" class="h-[0.95rem] w-[0.95rem] text-molten-300" />{c}
-            </span>
-          ))}
-        </div>
+  <!-- Clients -->
+  <section class="section clients">
+    <div class="wrap">
+      <div class="head">
+        <Display text="Running in these plants" />
+        <p class="lede" data-in>Forging shops, gear makers and two-wheeler plants that heat with Supertherm machines. <a class="link" href="/clients">All clients</a></p>
       </div>
-      <div class="grid place-items-center" data-reveal="right">
-        <div class="relative grid h-60 w-60 place-items-center rounded-full border border-line bg-[radial-gradient(circle_at_40%_35%,rgba(255,157,61,0.22),transparent_60%)]">
-          <Icon name="globe" class="h-28 w-28 text-molten-300" />
-          <span class="absolute inset-0 animate-[pulse-ring_3s_infinite] rounded-full border border-molten-500"></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ CLIENTS MARQUEE ============ -->
-  <section class="overflow-hidden border-y border-line bg-ink-2 py-12">
-    <p class="mx-auto mb-7 w-full max-w-7xl px-6 text-center text-[0.78rem] uppercase tracking-[0.2em] text-faint" data-reveal>
-      Chosen by leading manufacturers
-    </p>
-    <div class="[mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
-      <div class="marquee-track gap-4">
-        {[...clientLogos, ...clientLogos].map((src, i) => (
-          <span class="flex h-20 w-40 flex-none items-center justify-center rounded-xl bg-white p-4">
-            <img src={src} alt={`Client ${(i % clientLogos.length) + 1}`} loading="lazy" class="max-h-full max-w-full object-contain" />
-          </span>
+      <ul class="logos">
+        {clientLogos.slice(0, 15).map((src, i) => (
+          <li data-in style={`--i:${i % 5}`}><img src={src} alt="" loading="lazy" width="436" height="300" /></li>
         ))}
-      </div>
+      </ul>
     </div>
   </section>
 
-  <!-- ============ TESTIMONIALS ============ -->
-  <section class="border-b border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading align="center" eyebrow="In their words" title="What the shop floor says" />
-      <div class="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+  <!-- What customers say -->
+  <section class="section said">
+    <div class="wrap">
+      <Display text="What customers say" />
+      <ul class="quotes">
         {testimonials.map((t, i) => (
-          <figure class="card p-8" data-reveal style={`--reveal-delay:${i * 90}ms`}>
-            <div class="font-display text-[3.5rem] leading-[0.6] text-molten-500/50">&ldquo;</div>
-            <blockquote class="mt-4 text-[1.02rem] leading-7">{t.quote}</blockquote>
-            <figcaption class="mt-5 flex flex-col">
-              <strong class="text-[0.95rem]">{t.name}</strong>
-              <span class="text-[0.85rem] text-molten-300">{t.org}</span>
-            </figcaption>
-          </figure>
+          <li data-in style={`--i:${i}`}>
+            <blockquote>{si(t.quote)}</blockquote>
+            <p>{t.name}</p>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   </section>
 
-  <CtaBand />
+  <!-- Service network -->
+  <section class="section net">
+    <div class="wrap split">
+      <div class="head stick">
+        <Display text="Service within reach" />
+        <p class="lede" data-in>Seven offices across India and a service line that answers day and night. Machines delivered to {countries.slice(1, -1).join(', ')} and {countries[countries.length - 1]}.</p>
+        <a class="btn btn-line" href="/branches" data-in>Addresses and contacts</a>
+      </div>
+      <ul class="rows offices">
+        {branches.map((b, i) => (
+          <li data-in style={`--i:${i}`}>
+            <span class="city display display-sm">{b.city}</span>
+            <span class="role">{b.role}<br />{b.region}</span>
+            <a class="num" href={`tel:${tel(b.phones[b.phones.length > 1 ? 1 : 0])}`}>{b.phones[b.phones.length > 1 ? 1 : 0]}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <Enquiry />
 </Layout>
 
-<script>
-  // Hero banner crossfade carousel
-  const slides = document.querySelectorAll<HTMLElement>('[data-hero-carousel] .hero-slide');
-  if (slides.length > 1) {
-    let idx = 0;
-    setInterval(() => {
-      slides[idx].classList.remove('active');
-      idx = (idx + 1) % slides.length;
-      slides[idx].classList.add('active');
-    }, 6000);
+<style>
+  /* Hero */
+  .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: space-between; padding-top: calc(var(--nav-h) + clamp(1.5rem, 4vh, 3.5rem)); padding-bottom: 1.25rem; overflow: hidden; }
+  .hero :global(h1) { font-size: clamp(2.9rem, min(9.4vw, 15.5vh), 11rem); }
+  .sub { display: grid; gap: 1.5rem; margin-top: clamp(1.5rem, 3vh, 2.5rem); margin-bottom: clamp(1rem, 2vh, 2rem); align-items: end; }
+  .acts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  @media (min-width: 900px) { .sub { grid-template-columns: minmax(0, 34rem) auto; justify-content: space-between; } }
+  @media (max-width: 520px) { .acts .btn { width: 100%; } }
+
+  /* Statement */
+  .statement { min-height: 100svh; display: flex; align-items: center; padding-block: clamp(4rem, 10vh, 7rem); }
+  .statement p { font-stretch: 78%; font-weight: 650; font-size: clamp(1.7rem, 4.3vw, 4rem); line-height: 1.08; letter-spacing: -0.01em; max-width: 22em; text-wrap: pretty; }
+  .statement.is-armed .sw { color: var(--rule); transition: color 0.45s; }
+  .statement.is-armed .sw.is-hot { color: var(--h900); transition-duration: 0.08s; }
+  .statement.is-armed .sw.is-lit { color: var(--steel); }
+  .gauge { display: none; margin-top: clamp(2rem, 5vh, 4rem); height: 3px; background: var(--rule); max-width: 22rem; }
+  .gauge span { display: block; height: 100%; background: linear-gradient(90deg, var(--h700), var(--h900), var(--h1100)); transform-origin: left; transform: scaleX(var(--p, 0)); }
+  .statement.is-armed .gauge { display: block; }
+
+  /* Section heads */
+  .head { display: grid; gap: 1.5rem; margin-bottom: clamp(2.5rem, 5vw, 4.5rem); }
+  @media (min-width: 1024px) {
+    .head:not(.stick) { grid-template-columns: 1.5fr 1fr; align-items: end; gap: 4rem; }
+    .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(3rem, 6vw, 7rem); align-items: start; }
+    .stick { position: sticky; top: calc(var(--nav-h) + 2rem); margin-bottom: 0; justify-items: start; }
   }
-</script>
+
+  /* Machine rows */
+  .machines a { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.75rem 1.25rem; align-items: center; padding-block: 1.5rem; transition: background-color 0.2s, padding 0.35s var(--ease); }
+  .machines :global(.glyph) { width: 5.5rem; height: auto; }
+  .name p { color: var(--fg-2); margin-top: 0.4rem; }
+  .specs { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; font-weight: 600; }
+  .go { display: none; }
+  @media (min-width: 1024px) {
+    .machines a { grid-template-columns: 10rem 1.5fr 1fr auto; gap: 2.5rem; padding-block: 2rem; }
+    .machines :global(.glyph) { width: 10rem; }
+    .specs { grid-column: auto; flex-direction: column; }
+    .go { display: block; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+    .machines a:hover { background: var(--plate); padding-inline: 1.5rem; }
+    .machines a:hover .go { text-decoration-thickness: 2px; }
+  }
+
+  /* Division lists */
+  .range { padding-top: 0; }
+  .divs { display: grid; gap: 2.5rem; }
+  .divs h3 { padding-bottom: 0.75rem; border-bottom: 1px solid var(--fg); margin-bottom: 0.75rem; }
+  .divs ul { columns: 2; column-gap: 2rem; }
+  .divs li { padding-block: 0.35rem; break-inside: avoid; color: var(--fg-2); }
+  @media (min-width: 900px) { .divs { grid-template-columns: 1fr 1fr; gap: 5rem; } }
+  @media (max-width: 480px) { .divs ul { columns: 1; } }
+
+  /* Sizing */
+  .size { background: var(--plate); border-block: 1px solid var(--line); }
+
+  /* Steps */
+  .head.two .shot { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 3px; max-width: 34rem; justify-self: end; width: 100%; }
+  .steps { display: grid; gap: 2rem; counter-reset: s; }
+  .steps li { border-top: 1px solid var(--fg); padding-top: 1rem; }
+  .steps .figure { color: var(--cab); display: block; margin-bottom: 1.25rem; }
+  .steps p { color: var(--fg-2); margin-top: 0.5rem; max-width: 22rem; }
+  @media (min-width: 700px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) { .steps { grid-template-columns: repeat(4, 1fr); gap: 2.5rem; } }
+
+  /* Support, training, R&D */
+  .after { background: var(--plate); border-block: 1px solid var(--line); }
+  .trio { display: grid; gap: 2rem; }
+  .trio p { color: var(--fg-2); margin-top: 0.5rem; max-width: 26rem; }
+  @media (min-width: 900px) { .trio { grid-template-columns: repeat(3, 1fr); gap: 3rem; } }
+
+  /* Testimonials */
+  .quotes { display: grid; gap: 2.5rem; margin-top: clamp(2.5rem, 5vw, 4.5rem); }
+  .quotes li { border-top: 1px solid var(--fg); padding-top: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; }
+  .quotes blockquote { font-size: 1.2rem; line-height: 1.4; font-stretch: 92%; font-weight: 500; }
+  .quotes p { font-weight: 700; }
+  @media (min-width: 1000px) { .quotes { grid-template-columns: repeat(3, 1fr); gap: 3rem; } }
+
+  /* Logos: supplied on white, so multiply drops the white into the plate */
+  .clients { background: #fff; border-block: 1px solid var(--line); }
+  .logos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .logos li { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); aspect-ratio: 3 / 2; display: grid; place-items: center; padding: 12%; min-width: 0; }
+  .logos img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; filter: grayscale(1) contrast(1.05); transition: filter 0.3s; }
+  .logos li:hover img { filter: none; }
+  @media (min-width: 800px) { .logos { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+  /* Offices */
+  .offices li { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 1.5rem; padding-block: 1.1rem; align-items: baseline; }
+  .offices .city { font-size: clamp(1.75rem, 3vw, 2.6rem); }
+  .offices .role { color: var(--fg-3); font-size: 0.9375rem; grid-column: 1; }
+  .offices a { grid-row: 1; grid-column: 2; font-weight: 600; }
+  .offices a:hover { color: var(--accent); }
+  @media (min-width: 700px) {
+    .offices li { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto; }
+    .offices .role { grid-column: auto; }
+    .offices a { grid-row: auto; grid-column: auto; }
+  }
+</style>

@@ -1,207 +1,124 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
-import SectionHeading from '../components/SectionHeading.astro';
-import StatStrip from '../components/StatStrip.astro';
-import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
-import { company, advantages, aboutImages, visionMission, productFeatures, comparison } from '../data/site';
-import { heroFor } from '../data/content';
+import Display from '../components/Display.astro';
+import Plate from '../components/Plate.astro';
+import Enquiry from '../components/Enquiry.astro';
+import { aboutImages, visionMission, productFeatures, comparison, advantages } from '../data/content';
+import { company, heroFor } from '../data/content';
 
-const hero = heroFor('about', {
-  eyebrow: 'About us',
-  title: 'Three decades of induction expertise',
-  subtitle: `Since ${company.established}, ${company.name} has designed and built induction systems that heat, harden, melt and weld metal for manufacturers across Asia and the Gulf.`,
-});
-
-const rndTeams = ['Electronics', 'Electrical', 'Automation', 'Mechanical', 'Metallurgical'];
-const timeline = [
-  { year: '1994', title: 'Founded', text: 'Supertherm begins building induction heating power sources for Indian industry.' },
-  { year: '2005', title: 'Melting division', text: 'Expanded into ferrous and non-ferrous melting and holding furnaces.' },
-  { year: '2013', title: 'IGBT era', text: 'Adopted solid-state IGBT sources up to 750 KW for higher efficiency.' },
-  { year: '2020', title: 'Global reach', text: '1000+ machines delivered across nine countries in Asia and the Gulf.' },
-];
+const hero = heroFor('about');
+const disciplines = ['Electronics', 'Electrical', 'Automation', 'Mechanical', 'Metallurgical'];
 const glance = [
-  ['Founded', String(company.established)],
-  ['Head office', 'Bahadurgarh, Haryana'],
-  ['Power range', 'Up to 750 KW'],
-  ['Technology', 'IGBT solid-state'],
-  ['Countries served', '9 and growing'],
-  ['Support', '24 / 7'],
+  ['Head office and works', 'Bahadurgarh, Haryana'],
+  ['Melting power sources', 'Up to 750 kW, IGBT (1 to 1.5 ton)'],
+  ['HF welding', 'MOSFET based'],
+  ['Forging power sources', '50 to 2000 kW'],
+  ['Countries served', '9'],
+  ['Service line', 'Open 24 hours'],
 ];
 ---
 
-<Layout title={`About — ${company.name}`} description="Three decades engineering induction heating equipment in-house — from R&D to lifetime service.">
-  <PageHero eyebrow={hero.eyebrow} title={hero.title} subtitle={hero.subtitle} />
+<Layout title={`About | ${company.name}`} description="Three decades engineering induction heating equipment in-house, from R&D to lifetime service.">
+  <PageHero title={hero.title} subtitle={hero.subtitle} />
 
-  <!-- Story -->
-  <section class="py-24">
-    <div class="mx-auto grid w-full max-w-7xl items-start gap-12 px-5 sm:px-6 lg:grid-cols-[1.4fr_0.9fr]">
-      <div>
-        <SectionHeading eyebrow="Our story" title="Engineering that stays<br />on the shop floor with you">
-          <span class="block">
-            We are a world-class manufacturer of induction heating equipment — specialising in
-            induction hardening, billet and bar heating, melting power sources up to 750 KW,
-            high-frequency welding, annealing and brazing.
-          </span>
-        </SectionHeading>
-        <p class="mt-6 leading-8 text-muted" data-reveal>
-          What sets us apart isn't just the machines — it's the team behind them. Our in-house R&D
-          group spans five engineering disciplines, so every coil, power source and control system
-          is designed for your exact process. And because we build it, we can support it — around
-          the clock, with genuine spare parts and hands-on operator training.
-        </p>
-        <div class="mt-8 flex flex-col gap-3" data-reveal>
-          {['Designed & built in-house', 'Genuine spare parts', 'Lifetime service support'].map((b) => (
-            <div class="flex items-center gap-2.5 text-[0.95rem]">
-              <Icon name="check" class="h-[1.15rem] w-[1.15rem] text-molten-400" />{b}
-            </div>
-          ))}
-        </div>
+  <section class="section">
+    <div class="wrap story">
+      <div class="text">
+        <p class="big" data-in>Supertherm Corporations is a world-class manufacturer of induction heating equipment: hardening machines, billet and bar heaters, melting power sources up to 750 kW, high-frequency welders, and annealing and brazing sets. More than 550 of our hardening and melting machines, with IGBT inverters and digital control, are in service.</p>
+        <p data-in>The company was started by professionals with more than 30 years in induction applications, and the machines are designed by the people who build them. Our R&D group covers five engineering disciplines, so the coil, the power source and the control system are worked out together for the part you are heating.</p>
+        <p data-in>We offer a complete induction solution, built by highly professional and qualified staff. Because we build it, we can keep it running. The service line is answered around the clock, spare parts are our own, and operators are trained on the machine before it leaves the works.</p>
+        <dl class="rows glance" data-in>
+          {glance.map(([k, v]) => <div class="kv"><dt>{k}</dt><dd class="num">{v}</dd></div>)}
+        </dl>
       </div>
-
-      <aside class="card card-glow overflow-hidden" data-reveal="right">
-        <div class="aspect-[16/10] overflow-hidden">
-          <img src={aboutImages.primary} alt="Supertherm manufacturing facility" loading="lazy" class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105" />
-        </div>
-        <h3 class="mx-8 mb-5 mt-6 text-[1.1rem]">At a glance</h3>
-        <ul class="mx-8 flex flex-col pb-6">
-          {glance.map(([k, v], i) => (
-            <li class:list={['flex justify-between gap-4 py-3.5 text-[0.92rem]', i < glance.length - 1 && 'border-b border-line']}>
-              <span class="text-muted">{k}</span><strong class="text-right text-fg">{v}</strong>
-            </li>
-          ))}
-        </ul>
-      </aside>
-    </div>
-  </section>
-
-  <StatStrip />
-
-  <!-- Vision & Mission -->
-  <section class="py-24">
-    <div class="mx-auto grid w-full max-w-7xl gap-6 px-5 sm:px-6 md:grid-cols-2">
-      <div class="card card-glow p-8" data-reveal>
-        <span class="grid h-12 w-12 place-items-center rounded-xl border border-molten-300/25 bg-molten-500/10">
-          <Icon name="spark" class="h-6 w-6 text-molten-300" />
-        </span>
-        <h3 class="mt-5 font-display text-[1.4rem] font-bold">Our Vision</h3>
-        <p class="mt-3 text-[1.05rem] leading-8 text-muted">{visionMission.vision}</p>
-      </div>
-      <div class="card card-glow p-8" data-reveal style="--reveal-delay:100ms">
-        <span class="grid h-12 w-12 place-items-center rounded-xl border border-molten-300/25 bg-molten-500/10">
-          <Icon name="chip" class="h-6 w-6 text-molten-300" />
-        </span>
-        <h3 class="mt-5 font-display text-[1.4rem] font-bold">Our Mission</h3>
-        <p class="mt-3 text-[1.05rem] leading-8 text-muted">{visionMission.mission}</p>
+      <div class="shots">
+        <div class="shot a" data-wipe><img class="photo" src={aboutImages.capability2} alt="Billet heater with in-feed conveyor at the Supertherm works" loading="lazy" width="1200" height="900" /></div>
+        <div class="shot b" data-wipe><img class="photo" src={aboutImages.primary} alt="Supertherm induction machine and control cabinet" loading="lazy" width="500" height="500" /></div>
       </div>
     </div>
   </section>
 
-  <!-- Product features -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading eyebrow="Engineering edge" title="Product features that <span class='text-gradient'>benefit customers</span>">
-        Every Supertherm machine is built to deliver measurable gains on the shop floor.
-      </SectionHeading>
-      <ul class="mt-12 grid grid-cols-1 gap-x-8 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-3">
-        {productFeatures.map((f, i) => (
-          <li class="flex items-start gap-3 text-[0.95rem]" data-reveal style={`--reveal-delay:${(i % 3) * 60}ms`}>
-            <Icon name="check" class="mt-0.5 h-[1.15rem] w-[1.15rem] shrink-0 text-molten-400" />
-            <span>{f}</span>
-          </li>
-        ))}
+  <Plate />
+
+  <section class="section">
+    <div class="wrap">
+      <Display text="Five disciplines, one works" />
+      <ul class="disc">
+        {disciplines.map((d, i) => <li class="display display-sm" data-in style={`--i:${i}`}>{d}</li>)}
       </ul>
     </div>
   </section>
 
-  <!-- Comparison table -->
-  <section class="py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading align="center" eyebrow="Why induction" title="Induction vs <span class='text-gradient'>conventional heating</span>">
-        The numbers behind lower running cost, less scale loss and cleaner production.
-      </SectionHeading>
-      <div class="mt-12 overflow-x-auto rounded-2xl border border-line" data-reveal>
-        <table class="w-full border-collapse text-left text-[0.9rem] [font-variant-numeric:tabular-nums]">
-          <thead>
-            <tr class="bg-white/[0.03]">
-              {comparison.headers.map((h, i) => (
-                <th class:list={['whitespace-nowrap border-b border-line px-5 py-3.5 font-display text-[0.85rem] font-semibold', i === 1 ? 'text-molten-300' : 'text-fg']}>{h}</th>
-              ))}
-            </tr>
-          </thead>
+  <section class="section-tight alt">
+    <div class="wrap">
+      <ul class="trio">
+        {advantages.map((a, i) => <li data-in style={`--i:${i}`}><h3 class="h3">{a.title}</h3><p>{a.text}</p></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="stick">
+        <Display text="Built into every machine" />
+      </div>
+      <ul class="rows feats">
+        {productFeatures.map((f, i) => <li data-in style={`--i:${i % 6}`}>{f}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap">
+      <Display text="Induction against oil and gas" />
+      <p class="lede lead" data-in>An induction billet heater compared with fuel-fired furnaces on the measures a forge shop tracks.</p>
+      <div class="table-scroll" data-in>
+        <table class="spec-table">
+          <thead><tr>{comparison.headers.map((h) => <th>{h}</th>)}</tr></thead>
           <tbody>
-            {comparison.rows.map((row) => (
-              <tr class="transition-colors hover:bg-white/[0.02]">
-                {row.map((cell, ci) => (
-                  <td class:list={[
-                    'border-b border-line/60 px-5 py-3.5',
-                    ci === 0 ? 'font-medium text-fg' : ci === 1 ? 'font-semibold text-molten-200' : 'text-muted',
-                  ]}>{cell}</td>
-                ))}
-              </tr>
-            ))}
+            {comparison.rows.map((r) => <tr>{r.map((c, i) => <td class:list={[i === 1 && 'us']}>{c}</td>)}</tr>)}
           </tbody>
         </table>
       </div>
-      <p class="mt-4 text-center text-[0.8rem] text-faint">Indicative figures for billet heating; actual results vary by part and process.</p>
     </div>
   </section>
 
-  <!-- Timeline -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading align="center" eyebrow="Milestones" title="A track record <span class='text-gradient'>forged over time</span>" />
-      <div class="mt-14 grid gap-5">
-        {timeline.map((t, i) => (
-          <div class="grid grid-cols-[4rem_1.5rem_1fr] items-start gap-4 sm:grid-cols-[6rem_1.5rem_1fr]" data-reveal style={`--reveal-delay:${i * 90}ms`}>
-            <div class="pt-0.5 font-display font-bold text-molten-300">{t.year}</div>
-            <div class="relative mx-auto mt-1.5 h-3.5 w-3.5 rounded-full bg-molten-500 shadow-[0_0_0_4px_rgba(247,63,0,0.15)]">
-              {i < timeline.length - 1 && <span class="absolute left-1/2 top-4 h-[calc(100%+1.25rem)] w-px -translate-x-1/2 bg-line"></span>}
-            </div>
-            <div class="rounded-2xl border border-line bg-gradient-to-b from-white/[0.03] to-transparent px-6 py-5">
-              <h3 class="text-[1.1rem]">{t.title}</h3>
-              <p class="mt-1.5 text-[0.92rem] leading-[1.6] text-muted">{t.text}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+  <section class="section">
+    <div class="wrap vm">
+      <div data-in><h2 class="h3">Vision</h2><p class="display display-sm">{visionMission.vision}</p></div>
+      <div data-in style="--i:1"><h2 class="h3">Mission</h2><p class="display display-sm">{visionMission.mission}</p></div>
     </div>
   </section>
 
-  <!-- R&D -->
-  <section class="py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading eyebrow="In-house R&D" title="Five disciplines, one roof">
-        Cross-functional engineering means faster problem-solving and machines tuned to your metallurgy.
-      </SectionHeading>
-      <div class="mt-12 grid grid-cols-2 gap-4 md:grid-cols-5">
-        {rndTeams.map((r, i) => (
-          <div class="card flex items-center gap-3 px-6 py-6 font-display font-semibold transition-transform duration-300 hover:-translate-y-1 hover:border-molten-400" data-reveal style={`--reveal-delay:${i * 70}ms`}>
-            <Icon name="rnd" class="h-6 w-6 shrink-0 text-molten-300" /><span>{r}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Why -->
-  <section class="border-y border-line bg-gradient-to-b from-ink-2 to-ink py-24">
-    <div class="mx-auto w-full max-w-7xl px-5 sm:px-6">
-      <SectionHeading eyebrow="Why Supertherm" title="What you can count on" />
-      <div class="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {advantages.map((a, i) => (
-          <div class="card card-glow p-8" data-tilt data-reveal style={`--reveal-delay:${i * 80}ms`}>
-            <span class="grid h-12 w-12 place-items-center rounded-[0.85rem] border border-molten-300/[0.22] bg-gradient-to-br from-molten-300/[0.16] to-molten-500/[0.06]">
-              <Icon name={a.icon} class="h-[1.6rem] w-[1.6rem] text-molten-300" />
-            </span>
-            <h3 class="mt-[1.1rem] text-[1.15rem]">{a.title}</h3>
-            <p class="mt-2 text-[0.92rem] leading-[1.6] text-muted">{a.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <CtaBand />
+  <Enquiry />
 </Layout>
+
+<style>
+  .story { display: grid; gap: clamp(2.5rem, 6vw, 6rem); }
+  .text { display: flex; flex-direction: column; gap: 1.25rem; max-width: 40rem; }
+  .big { font-size: clamp(1.35rem, 2.2vw, 1.85rem); line-height: 1.3; font-stretch: 90%; font-weight: 600; }
+  .text p:not(.big) { color: var(--fg-2); }
+  .glance { margin-top: 1.5rem; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-content: start; }
+  .shot { overflow: hidden; border-radius: 3px; }
+  .shot.a { grid-column: 1 / -1; aspect-ratio: 4 / 3; }
+  .shot.b { aspect-ratio: 1; }
+  .disc { margin-top: clamp(2rem, 4vw, 3.5rem); display: flex; flex-wrap: wrap; gap: 0.5rem clamp(1.5rem, 4vw, 4rem); color: var(--cab); }
+  .alt { background: var(--plate); border-block: 1px solid var(--line); }
+  .trio { display: grid; gap: 2rem; }
+  .trio p { color: var(--fg-2); margin-top: 0.5rem; max-width: 26rem; }
+  @media (min-width: 900px) { .trio { grid-template-columns: repeat(3, 1fr); gap: 3rem; } }
+  .feats li { padding-block: 0.9rem; font-weight: 550; }
+  .lead { margin-block: 1.5rem 2.5rem; }
+  td.us { font-weight: 650; color: var(--cab-deep); }
+  .vm { display: grid; gap: 3rem; }
+  .vm h2 { color: var(--fg-3); font-weight: 500; font-size: 1rem; margin-bottom: 1rem; }
+  @media (min-width: 1024px) {
+    .story { grid-template-columns: 1.1fr 1fr; }
+    .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(3rem, 6vw, 7rem); align-items: start; }
+    .stick { position: sticky; top: calc(var(--nav-h) + 2rem); }
+    .vm { grid-template-columns: 1fr 1fr; gap: 5rem; }
+  }
+  @media (max-width: 1023px) { .stick { margin-bottom: 2rem; } }
+</style>

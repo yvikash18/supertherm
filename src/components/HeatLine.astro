@@ -1,0 +1,208 @@
+---
+// Hero drawing: a billet heater running. Cold bar stock is pushed through a
+// copper induction coil and leaves at forging temperature. Decorative canvas;
+// the readings beside it are real text.
+---
+
+<div class="heatline" data-heatline>
+  <canvas aria-hidden="true"></canvas>
+  <dl class="readings wrap">
+    <div><dt>Bar stock in</dt><dd class="num">30 °C</dd></div>
+    <div class="mid"><dt>Inside the coil</dt><dd>Current flows in the steel itself</dd></div>
+    <div class="out"><dt>Pyrometer at exit</dt><dd class="num temp"><span data-pyro>1250</span> °C</dd></div>
+  </dl>
+</div>
+
+<style>
+  .heatline { position: relative; }
+  canvas { display: block; border-bottom: 1px solid var(--line); width: 100%; height: clamp(140px, 22vh, 230px); }
+  .readings { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 0.75rem; font-size: 0.9375rem; }
+  dt { color: var(--fg-3); }
+  dd { font-weight: 600; }
+  .mid { display: none; }
+  .out { text-align: right; }
+  .temp { color: var(--h1100); }
+  @media (min-width: 768px) {
+    .readings { grid-template-columns: 1fr 1.4fr 1fr; }
+    .mid { display: block; text-align: center; }
+  }
+</style>
+
+<script>
+  import { tempCSS, glowAt } from '../lib/heat';
+
+  const root = document.querySelector<HTMLElement>('[data-heatline]');
+  const canvas = root?.querySelector('canvas');
+  const pyro = root?.querySelector<HTMLElement>('[data-pyro]');
+  const ctx = canvas?.getContext('2d');
+
+  if (root && canvas && ctx) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const COPPER = '#c0703e', COPPER_LIT = '#eaa877', COPPER_BACK = '#6e3d22';
+    let W = 0, H = 0, dpr = 1;
+    let cy = 0, bh = 0, bl = 0, c0 = 0, c1 = 0, pitch = 0, speed = 0;
+    let glow: HTMLCanvasElement | null = null;
+    let glowPower = -1;
+
+    // Steady-state temperature along the line: fast to the Curie point, slower above it.
+    const tempAt = (x: number, power: number) => {
+      const u = Math.max(0, Math.min(1, (x - c0) / (c1 - c0)));
+      let t = 30 + 1220 * (1 - Math.pow(1 - u, 1.7));
+      if (x > c1) t -= ((x - c1) / Math.max(1, W - c1)) * 90; // surface cools a little in open air
+      return 30 + (t - 30) * power;
+    };
+
+    function measure() {
+      const r = canvas!.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = r.width; H = r.height;
+      canvas!.width = Math.round(W * dpr);
+      canvas!.height = Math.round(H * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const narrow = W < 700;
+      cy = H * 0.5;
+      bh = Math.min(62, H * 0.27);
+      bl = bh * 2.7;
+      c0 = W * (narrow ? 0.16 : 0.3);
+      c1 = W * (narrow ? 0.6 : 0.6);
+      pitch = bh * 0.46;
+      speed = narrow ? 26 : 40;
+      glowPower = -1;
+    }
+
+    // Soft light thrown by the hot metal, rendered small and scaled up.
+    function buildGlow(power: number) {
+      const gw = Math.max(2, Math.round(W / 6)), gh = Math.max(2, Math.round(H / 6));
+      glow = glow || document.createElement('canvas');
+      glow.width = gw; glow.height = gh;
+      const g = glow.getContext('2d')!;
+      const lg = g.createLinearGradient(0, 0, gw, 0);
+      for (let i = 0; i <= 24; i++) {
+        const x = (i / 24) * W, t = tempAt(x, power);
+        lg.addColorStop(i / 24, tempCSS(Math.max(t, 700), glowAt(t) * 0.55));
+      }
+      g.fillStyle = lg;
+      g.fillRect(0, 0, gw, gh);
+      const vg = g.createLinearGradient(0, 0, 0, gh);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(0.5, 'rgba(0,0,0,1)'); vg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.globalCompositeOperation = 'destination-in';
+      g.fillStyle = vg;
+      g.fillRect(0, 0, gw, gh);
+      glowPower = power;
+    }
+
+    function strand(x0: number, y0: number, x1: number, y1: number, w: number, body: string, light?: string) {
+      ctx!.lineCap = 'round';
+      ctx!.strokeStyle = body; ctx!.lineWidth = w;
+      ctx!.beginPath(); ctx!.moveTo(x0, y0); ctx!.lineTo(x1, y1); ctx!.stroke();
+      if (light) {
+        ctx!.strokeStyle = light; ctx!.lineWidth = Math.max(1, w * 0.22);
+        ctx!.beginPath(); ctx!.moveTo(x0 - w * 0.2, y0); ctx!.lineTo(x1 - w * 0.2, y1); ctx!.stroke();
+      }
+    }
+
+    function draw(time: number, power: number) {
+      const c = ctx!;
+      c.clearRect(0, 0, W, H);
+      const R = bh * 0.86, tube = bh * 0.2;
+      const turns = Math.max(4, Math.floor((c1 - c0) / pitch));
+      const span = turns * pitch;
+      const top = cy - bh / 2;
+
+      // Roller table either side of the coil
+      c.strokeStyle = 'rgba(169,180,190,0.28)'; c.lineWidth = 1;
+      const railY = cy + bh / 2 + 7;
+      for (let x = 30; x < W; x += 74) {
+        if (x > c0 - 26 && x < c0 + span + 26) continue;
+        const a = (time * speed) / 6 + x;
+        c.beginPath(); c.arc(x, railY, 6, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.moveTo(x, railY); c.lineTo(x + Math.cos(a) * 6, railY + Math.sin(a) * 6); c.stroke();
+      }
+
+      // Bus bars feeding the coil
+      strand(c0, cy + R, c0, H + 10, tube, COPPER_BACK);
+      strand(c0 + span + pitch / 2, cy + R, c0 + span + pitch / 2, H + 10, tube, COPPER_BACK);
+
+      // Far side of each turn
+      for (let i = 0; i < turns; i++) {
+        const x = c0 + i * pitch;
+        strand(x + pitch / 2, cy + R, x + pitch, cy - R, tube, COPPER_BACK);
+      }
+
+      // Glow behind the bars
+      if (power > 0.02) {
+        if (Math.abs(power - glowPower) > 0.015 || !glow) buildGlow(power);
+        const flicker = 0.93 + 0.07 * Math.sin(time * 5.1) * Math.sin(time * 1.7);
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = flicker;
+        c.drawImage(glow!, 0, 0, W, H);
+        c.globalAlpha = 1;
+        c.globalCompositeOperation = 'source-over';
+      }
+
+      // Bars: one moving mask over a temperature gradient fixed in space
+      const step = bl + 5;
+      const off = (time * speed) % step;
+      c.save();
+      c.beginPath();
+      for (let x = -step + off; x < W + step; x += step) c.roundRect(x, top, bl, bh, 3);
+      c.clip();
+      const lg = c.createLinearGradient(0, 0, W, 0);
+      for (let i = 0; i <= 32; i++) lg.addColorStop(i / 32, tempCSS(tempAt((i / 32) * W, power)));
+      c.fillStyle = lg;
+      c.fillRect(0, top, W, bh);
+      // Round-bar shading
+      const sh = c.createLinearGradient(0, top, 0, top + bh);
+      sh.addColorStop(0, 'rgba(8,12,18,0.5)'); sh.addColorStop(0.3, 'rgba(255,255,255,0.1)');
+      sh.addColorStop(0.55, 'rgba(8,12,18,0)'); sh.addColorStop(1, 'rgba(8,12,18,0.62)');
+      c.fillStyle = sh;
+      c.fillRect(0, top, W, bh);
+      c.restore();
+
+      // Near side of each turn, lit from below by the bar where it is hot
+      for (let i = 0; i <= turns; i++) {
+        const x = c0 + i * pitch;
+        strand(x, cy - R, x + pitch / 2, cy + R, tube, COPPER, COPPER_LIT);
+      }
+      if (power > 0.02) {
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = 0.5 * power;
+        c.drawImage(glow!, 0, cy - bh * 1.2, W, bh * 2.4);
+        c.globalAlpha = 1;
+        c.globalCompositeOperation = 'source-over';
+      }
+    }
+
+    let start = 0, raf = 0, visible = true, lastPyro = 0;
+    const POWER_ON = 0.5, RAMP = 2.4; // seconds
+    function frame(now: number) {
+      if (!start) start = now;
+      const t = (now - start) / 1000;
+      const k = Math.max(0, Math.min(1, (t - POWER_ON) / RAMP));
+      const power = k * k * (3 - 2 * k);
+      draw(t, power);
+      if (pyro && now - lastPyro > 420) {
+        lastPyro = now;
+        pyro.textContent = String(Math.round(30 + 1220 * power + (power > 0.99 ? Math.sin(t * 2.3) * 4 : 0)));
+      }
+      if (visible) raf = requestAnimationFrame(frame);
+    }
+
+    measure();
+    if (reduced) {
+      draw(0, 1);
+    } else {
+      raf = requestAnimationFrame(frame);
+      new IntersectionObserver(([e]) => {
+        const was = visible;
+        visible = e.isIntersecting;
+        if (visible && !was) raf = requestAnimationFrame(frame);
+      }).observe(canvas);
+    }
+    let rt = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = window.setTimeout(() => { measure(); if (reduced) draw(0, 1); }, 120);
+    });
+  }
+</script>

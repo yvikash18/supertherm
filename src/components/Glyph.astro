@@ -1,0 +1,39 @@
+---
+// Process diagrams, one per machine family. Line work inherits text colour;
+// copper is the inductor; the heat colours mark only the metal that is hot.
+interface Props { name: string; class?: string }
+const { name, class: cls = '' } = Astro.props;
+const C = 'stroke="var(--copper)" stroke-width="4" stroke-linecap="round" fill="none"';
+const art: Record<string, string> = {
+  // Billet travelling through a multi-turn coil, leaving hot
+  forge: `
+    <defs><linearGradient id="g-forge" x1="0" x2="1"><stop offset=".28" stop-color="currentColor" stop-opacity=".28"/><stop offset=".5" stop-color="var(--h700)"/><stop offset=".72" stop-color="var(--h900)"/><stop offset="1" stop-color="var(--h1100)"/></linearGradient></defs>
+    <g ${C} opacity=".55"><path d="M49 22l8 36M63 22l8 36M77 22l8 36M91 22l8 36"/></g>
+    <rect x="8" y="31" width="144" height="18" rx="2" fill="url(#g-forge)"/>
+    <g ${C}><path d="M42 58l8-36M56 58l8-36M70 58l8-36M84 58l8-36M98 58l8-36"/></g>
+    <path d="M4 60h152" stroke="currentColor" stroke-width="1" opacity=".4"/>`,
+  // Shaft scanned by a single-turn inductor, quench below
+  hardening: `
+    <rect x="71" y="6" width="18" height="68" rx="2" fill="currentColor" opacity=".28"/>
+    <rect x="71" y="30" width="18" height="14" fill="var(--h900)"/>
+    <rect x="71" y="44" width="3" height="30" fill="var(--cab)"/><rect x="86" y="44" width="3" height="30" fill="var(--cab)"/>
+    <g ${C}><path d="M58 37h10M92 37h10"/><path d="M58 37v-8h-22M102 37v-8h22"/></g>
+    <g stroke="var(--cab)" stroke-width="1.4" stroke-linecap="round"><path d="M60 48l7 5M60 56l7 5M100 48l-7 5M100 56l-7 5"/></g>
+    <path d="M110 14v22m-4-6l4 6 4-6" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".6"/>`,
+  // Crucible with the coil in section either side, bath molten
+  melt: `
+    <path d="M52 12v44a12 12 0 0 0 12 12h32a12 12 0 0 0 12-12V12" fill="none" stroke="currentColor" stroke-width="3" opacity=".5"/>
+    <path d="M56 26h48v30a8 8 0 0 1-8 8H64a8 8 0 0 1-8-8z" fill="var(--h900)"/>
+    <path d="M56 26h48v5H56z" fill="var(--h1100)"/>
+    <g fill="var(--copper)"><circle cx="42" cy="20" r="4"/><circle cx="42" cy="32" r="4"/><circle cx="42" cy="44" r="4"/><circle cx="42" cy="56" r="4"/><circle cx="118" cy="20" r="4"/><circle cx="118" cy="32" r="4"/><circle cx="118" cy="44" r="4"/><circle cx="118" cy="56" r="4"/></g>`,
+  // Strip edges closing to a vee; the seam is welded where they meet
+  weld: `
+    <path d="M6 20L92 38M6 60L92 42" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/>
+    <path d="M96 40h58" stroke="currentColor" stroke-width="7" opacity=".28"/>
+    <path d="M70 33.5L96 40 70 46.5" stroke="var(--h900)" stroke-width="3" fill="none" stroke-linejoin="round"/>
+    <circle cx="96" cy="40" r="5" fill="var(--h1100)"/>
+    <ellipse cx="50" cy="40" rx="7" ry="27" ${C}/>`,
+};
+---
+
+<svg class={cls} viewBox="0 0 160 80" role="img" aria-label={`${name} process diagram`} set:html={art[name] ?? ''} />

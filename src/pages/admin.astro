@@ -1,11 +1,17 @@
 ---
 // Supertherm content console.
-// Standalone (not the marketing Layout), no-index. Talks only to the Supabase
-// `admin` Edge Function, which enforces the shared passcode server-side.
+// Standalone (not the marketing Layout) and no-index. The page itself is static;
+// everything it does goes through the site's own backend under /api
+// (Cloudflare Pages Functions, see server/cms.ts), which checks the signed-in
+// admin on every request. No key or secret is built into this page.
 import '../styles/global.css';
-const fnBase = import.meta.env.PUBLIC_SUPABASE_URL
-  ? `${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/admin`
-  : '';
+import * as site from '../data/site';
+import { SECTIONS } from '../data/cms-sections';
+
+// The built-in content, used as the starting point for sections that have never been saved.
+const defaults: Record<string, unknown> = {};
+for (const s of SECTIONS) for (const k of s.keys) defaults[k] = (site as Record<string, unknown>)[k];
+const defaultsJson = JSON.stringify(defaults).replace(/</g, '\\u003c');
 ---
 
 <!doctype html>
@@ -14,213 +20,285 @@ const fnBase = import.meta.env.PUBLIC_SUPABASE_URL
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Content Console — Supertherm</title>
+    <title>Content console | Supertherm</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" />
   </head>
-  <body class="min-h-dvh bg-ink text-fg" data-fn={fnBase}>
-    <!-- Passcode gate -->
-    <div data-gate class="grid min-h-dvh place-items-center px-5">
-      <form data-gate-form class="card w-full max-w-sm p-8">
-        <img src="/assets/logo.png" alt="Supertherm" class="mb-6 h-8 rounded bg-white px-2 py-1" />
-        <h1 class="font-display text-xl font-bold">Content console</h1>
-        <p class="mt-1 text-sm text-muted">Enter the admin passcode to continue.</p>
-        <input
-          data-passcode
-          type="password"
-          required
-          placeholder="Passcode"
-          class="mt-5 w-full rounded-xl border border-line bg-ink px-4 py-3 text-fg placeholder:text-faint focus:border-molten-400 focus:outline-none focus:ring-[3px] focus:ring-molten-500/15"
-        />
-        <button type="submit" class="btn btn-primary mt-4 w-full justify-center">Unlock</button>
-        <p data-gate-err class="mt-3 hidden text-sm text-red-400"></p>
-        {!fnBase && (
-          <p class="mt-4 rounded-lg border border-molten-500/30 bg-molten-500/10 p-3 text-xs text-molten-200">
-            Not connected: set <code>PUBLIC_SUPABASE_URL</code> and deploy the <code>admin</code> Edge Function. See <code>docs/CMS-SETUP.md</code>.
-          </p>
-        )}
-      </form>
-    </div>
+  <body class="cx">
+    <script type="application/json" id="cx-defaults" set:html={defaultsJson} />
+
+    <!-- Sign in -->
+    <main id="cx-login" class="cx-login">
+      <div class="cx-login-box">
+        <img src="/assets/logo.png" alt="Supertherm Corporations" class="cx-logo" width="160" height="40" />
+        <h1 class="display cx-login-title">Content console</h1>
+        <p class="note">Sign in to edit the website.</p>
+
+        <div id="cx-setup" class="cx-notice" role="status" hidden></div>
+        <div id="cx-preview" hidden>
+          <button type="button" id="cx-preview-btn" class="btn btn-line cx-full">Preview the editor</button>
+          <p class="note">Opens the editor with the site's built-in content. Nothing can be saved or published in preview.</p>
+        </div>
+
+        <form id="cx-login-form" class="cx-stack" novalidate>
+          <div class="field">
+            <label for="cx-email">Email</label>
+            <input id="cx-email" class="input" type="email" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="cx-password">Password</label>
+            <input id="cx-password" class="input" type="password" autocomplete="current-password" required />
+          </div>
+          <p id="cx-login-msg" class="cx-msg" role="alert" hidden></p>
+          <button id="cx-signin" type="submit" class="btn btn-solid cx-full">Sign in</button>
+        </form>
+      </div>
+    </main>
 
     <!-- Console -->
-    <div data-app class="hidden">
-      <header class="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-ink/85 px-5 py-3 backdrop-blur">
-        <div class="flex items-center gap-3">
-          <img src="/assets/logo.png" alt="Supertherm" class="h-7 rounded bg-white px-1.5 py-1" />
-          <span class="font-display text-sm font-semibold">Content Console</span>
+    <div id="cx-app" hidden>
+      <p id="cx-demo" class="cx-demo" role="status" hidden>
+        <strong>Preview mode.</strong> You are looking at the editor with the site's built-in content. Nothing you change here is saved or published.
+      </p>
+      <header class="cx-top">
+        <div class="cx-brand">
+          <img src="/assets/logo.png" alt="" class="cx-logo-sm" width="112" height="28" />
+          <span>Content console</span>
         </div>
-        <div class="flex items-center gap-2">
-          <input data-deploy-note placeholder="Deploy note (optional)" class="hidden w-48 rounded-lg border border-line bg-ink px-3 py-1.5 text-sm placeholder:text-faint focus:border-molten-400 focus:outline-none sm:block" />
-          <button data-deploy class="btn btn-primary px-4 py-2 text-sm">Deploy site</button>
-          <button data-lock class="btn btn-ghost px-3 py-2 text-sm">Lock</button>
+        <p id="cx-pub-state" class="cx-state" role="status"></p>
+        <div class="cx-top-actions">
+          <button type="button" id="cx-publish" class="btn btn-solid btn-sm">Publish</button>
+          <details class="cx-account">
+            <summary class="btn btn-line btn-sm"><span id="cx-who">Account</span></summary>
+            <div class="cx-menu">
+              <button type="button" id="cx-change-pw">Change password</button>
+              <button type="button" id="cx-signout">Sign out</button>
+            </div>
+          </details>
         </div>
       </header>
 
-      <div class="mx-auto grid max-w-6xl gap-6 p-5 lg:grid-cols-[220px_1fr]">
-        <!-- Route list -->
-        <aside class="flex flex-col gap-1.5">
-          <span class="mb-1 text-[0.7rem] uppercase tracking-[0.16em] text-faint">Routes</span>
-          <nav data-routes class="flex flex-col gap-1.5"></nav>
-        </aside>
+      <div class="cx-layout">
+        <nav id="cx-nav" class="cx-nav" aria-label="Sections"></nav>
 
-        <!-- Editor -->
-        <main class="min-w-0">
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <h2 data-editor-title class="font-display text-lg font-semibold">Select a route</h2>
-            <span data-status class="text-sm text-muted"></span>
-          </div>
-          <textarea data-editor spellcheck="false" class="h-[46vh] w-full rounded-xl border border-line bg-ink-2 p-4 font-mono text-[0.85rem] leading-relaxed text-fg focus:border-molten-400 focus:outline-none" placeholder="Select a route to edit its content…"></textarea>
-          <div class="mt-3 flex flex-wrap items-center gap-3">
-            <input data-summary placeholder="Summary of changes (what changed)" class="flex-1 rounded-xl border border-line bg-ink px-4 py-2.5 text-sm placeholder:text-faint focus:border-molten-400 focus:outline-none" />
-            <button data-save class="btn btn-primary px-5 py-2.5 text-sm">Save</button>
+        <main id="cx-main" class="cx-main">
+          <div class="cx-head">
+            <div>
+              <h1 id="cx-title" class="display cx-title"></h1>
+              <p id="cx-blurb" class="cx-blurb"></p>
+              <p id="cx-saved-by" class="note"></p>
+            </div>
+            <div class="cx-views" role="group" aria-label="Editor view">
+              <button type="button" data-view="form" aria-pressed="true">Form</button>
+              <button type="button" data-view="json" aria-pressed="false">JSON</button>
+            </div>
           </div>
 
-          <!-- Revision history -->
-          <section class="mt-8">
-            <h3 class="mb-3 text-[0.75rem] uppercase tracking-[0.16em] text-faint">Change history</h3>
-            <ul data-revisions class="flex flex-col gap-2 text-sm text-muted"></ul>
+          <div id="cx-editor" class="cx-editor"></div>
+
+          <section class="cx-history" aria-labelledby="cx-history-h">
+            <h2 id="cx-history-h" class="h3">Change history</h2>
+            <p class="note">Every save of this section. Restore loads an earlier version into the editor; it goes live only after you save and publish.</p>
+            <ul id="cx-revisions" class="rows cx-revs"></ul>
+            <button type="button" id="cx-reset" class="btn btn-line btn-sm">Load built-in content</button>
           </section>
         </main>
       </div>
+
+      <form id="cx-savebar" class="cx-savebar">
+        <p id="cx-save-state" class="cx-state" role="status"></p>
+        <label class="cx-sr" for="cx-summary">What did you change?</label>
+        <input id="cx-summary" class="input cx-input" type="text" maxlength="300" placeholder="What did you change? (optional)" />
+        <button type="button" id="cx-discard" class="btn btn-line btn-sm">Discard</button>
+        <button type="submit" id="cx-save" class="btn btn-solid btn-sm">Save</button>
+      </form>
     </div>
 
+    <dialog id="cx-pub-dialog" class="cx-dialog" aria-labelledby="cx-pub-h">
+      <form id="cx-pub-form" class="cx-stack">
+        <h2 id="cx-pub-h" class="h3">Publish to the live site</h2>
+        <p>Everything saved in the console goes live. The site rebuilds, which takes a few minutes.</p>
+        <p id="cx-pub-warn" class="cx-notice" hidden><strong>You have unsaved changes.</strong> They are not included. Cancel and save them first if you want them published.</p>
+        <p id="cx-pub-hook" class="cx-notice" hidden><strong>No deploy hook is set.</strong> The content will be marked as published, but the site will not rebuild by itself. See <code>docs/CMS-SETUP.md</code>.</p>
+        <div class="field">
+          <label for="cx-pub-note">Note (optional)</label>
+          <input id="cx-pub-note" class="input" type="text" maxlength="300" />
+        </div>
+        <div class="cx-dialog-actions">
+          <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+          <button type="submit" id="cx-pub-go" class="btn btn-solid btn-sm">Publish now</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="cx-pw-dialog" class="cx-dialog" aria-labelledby="cx-pw-h">
+      <form id="cx-pw-form" class="cx-stack">
+        <h2 id="cx-pw-h" class="h3">Change password</h2>
+        <div class="field">
+          <label for="cx-pw-current">Current password</label>
+          <input id="cx-pw-current" class="input" type="password" autocomplete="current-password" required />
+        </div>
+        <div class="field">
+          <label for="cx-pw-next">New password</label>
+          <input id="cx-pw-next" class="input" type="password" autocomplete="new-password" minlength="10" required aria-describedby="cx-pw-help" />
+          <p id="cx-pw-help" class="note">At least 10 characters.</p>
+        </div>
+        <div class="field">
+          <label for="cx-pw-again">New password again</label>
+          <input id="cx-pw-again" class="input" type="password" autocomplete="new-password" minlength="10" required />
+        </div>
+        <p id="cx-pw-msg" class="cx-msg" role="alert" hidden></p>
+        <div class="cx-dialog-actions">
+          <button type="button" class="btn btn-line btn-sm" data-close>Cancel</button>
+          <button type="submit" class="btn btn-solid btn-sm">Change password</button>
+        </div>
+      </form>
+    </dialog>
+
+    <p id="cx-toast" class="cx-toast" role="status" aria-live="polite" hidden></p>
+
     <script>
-      const fn = document.body.dataset.fn;
-      const $ = (s: string) => document.querySelector(s) as HTMLElement;
-      const gate = $('[data-gate]'), app = $('[data-app]');
-      const state = { passcode: '', slug: '', pages: [] as any[] };
-
-      const api = async (action: string, body: Record<string, unknown> = {}) => {
-        if (!fn) throw new Error('Supabase function URL not configured');
-        const res = await fetch(fn, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passcode: state.passcode, action, ...body }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-        return data;
-      };
-
-      const setStatus = (msg: string, ok = true) => {
-        const el = $('[data-status]');
-        el.textContent = msg;
-        el.className = `text-sm ${ok ? 'text-emerald-400' : 'text-red-400'}`;
-        if (msg) setTimeout(() => (el.textContent = ''), 4000);
-      };
-
-      // Unlock
-      ($('[data-gate-form]') as HTMLFormElement).addEventListener('submit', async (e) => {
-        e.preventDefault();
-        state.passcode = ($('[data-passcode]') as HTMLInputElement).value.trim();
-        const err = $('[data-gate-err]');
-        try {
-          const { pages } = await api('list');
-          state.pages = pages;
-          sessionStorage.setItem('st_pc', state.passcode);
-          gate.classList.add('hidden');
-          app.classList.remove('hidden');
-          renderRoutes();
-        } catch (e: any) {
-          err.textContent = e.message === 'unauthorized' ? 'Wrong passcode.' : e.message;
-          err.classList.remove('hidden');
-        }
-      });
-
-      const renderRoutes = () => {
-        const nav = $('[data-routes]');
-        nav.innerHTML = '';
-        state.pages.forEach((p) => {
-          const b = document.createElement('button');
-          b.textContent = p.label || p.slug;
-          b.className =
-            'rounded-lg border border-line px-3 py-2 text-left text-sm text-muted transition-colors hover:border-molten-400 hover:text-fg';
-          b.onclick = () => selectRoute(p.slug);
-          b.dataset.slug = p.slug;
-          nav.appendChild(b);
-        });
-      };
-
-      const selectRoute = async (slug: string) => {
-        state.slug = slug;
-        const p = state.pages.find((x) => x.slug === slug);
-        $('[data-editor-title]').textContent = p.label || slug;
-        ($('[data-editor]') as HTMLTextAreaElement).value = JSON.stringify(p.content, null, 2);
-        document.querySelectorAll('[data-routes] button').forEach((b) =>
-          b.classList.toggle('border-molten-400', (b as HTMLElement).dataset.slug === slug)
-        );
-        loadRevisions(slug);
-      };
-
-      const loadRevisions = async (slug: string) => {
-        const ul = $('[data-revisions]');
-        ul.innerHTML = '<li class="text-faint">Loading…</li>';
-        try {
-          const { revisions } = await api('revisions', { slug });
-          ul.innerHTML = revisions.length ? '' : '<li class="text-faint">No changes yet.</li>';
-          revisions.forEach((r: any) => {
-            const li = document.createElement('li');
-            li.className = 'rounded-lg border border-line px-3 py-2';
-            const when = new Date(r.created_at).toLocaleString();
-            li.innerHTML = `<span class="text-fg">${r.summary}</span> <span class="text-faint">· ${when} · ${r.changed_by}</span>`;
-            ul.appendChild(li);
-          });
-        } catch (e: any) {
-          ul.innerHTML = `<li class="text-red-400">${e.message}</li>`;
-        }
-      };
-
-      // Save
-      $('[data-save]').addEventListener('click', async () => {
-        if (!state.slug) return setStatus('Pick a route first', false);
-        let content;
-        try {
-          content = JSON.parse(($('[data-editor]') as HTMLTextAreaElement).value);
-        } catch {
-          return setStatus('Invalid JSON', false);
-        }
-        const summary = ($('[data-summary]') as HTMLInputElement).value.trim() || 'Content updated';
-        try {
-          await api('save', { slug: state.slug, content, summary });
-          const p = state.pages.find((x) => x.slug === state.slug);
-          p.content = content;
-          ($('[data-summary]') as HTMLInputElement).value = '';
-          setStatus('Saved ✓');
-          loadRevisions(state.slug);
-        } catch (e: any) {
-          setStatus(e.message, false);
-        }
-      });
-
-      // Deploy
-      $('[data-deploy]').addEventListener('click', async () => {
-        if (!confirm('Trigger a Cloudflare Pages deploy with the latest content?')) return;
-        const note = ($('[data-deploy-note]') as HTMLInputElement).value.trim();
-        try {
-          const r = await api('deploy', { note });
-          setStatus(r.ok ? 'Deploy triggered ✓' : 'Deploy failed', r.ok);
-        } catch (e: any) {
-          setStatus(e.message, false);
-        }
-      });
-
-      $('[data-lock]').addEventListener('click', () => {
-        sessionStorage.removeItem('st_pc');
-        location.reload();
-      });
-
-      // Resume session
-      const saved = sessionStorage.getItem('st_pc');
-      if (saved && fn) {
-        state.passcode = saved;
-        api('list')
-          .then(({ pages }) => {
-            state.pages = pages;
-            gate.classList.add('hidden');
-            app.classList.remove('hidden');
-            renderRoutes();
-          })
-          .catch(() => sessionStorage.removeItem('st_pc'));
-      }
+      import '../admin/main.ts';
     </script>
+
+    <style is:global>
+      /* Console styles. Global on purpose: the editor is built in the browser.
+         Colours, type and buttons come from src/styles/global.css. */
+      .cx { min-height: 100dvh; font-size: 1rem; }
+      .cx [hidden] { display: none !important; }
+      .cx code { font-size: 0.9em; background: color-mix(in srgb, var(--steel) 8%, transparent); padding: 0.05em 0.3em; border-radius: 2px; }
+      /* Plain buttons inherit the surrounding text; .btn keeps its own colours */
+      .cx :where(button:not(.btn)) { font: inherit; color: inherit; }
+      .cx button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .cx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .cx-full { width: 100%; }
+      .cx-stack { display: flex; flex-direction: column; gap: 1rem; }
+      .cx-bad { color: var(--h700); }
+      .cx-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8125rem; line-height: 1.5; }
+
+      /* Sign in */
+      .cx-login { min-height: 100dvh; display: grid; place-items: center; padding: 2rem 1rem; }
+      .cx-login-box { width: 100%; max-width: 26rem; display: flex; flex-direction: column; gap: 1rem; background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; padding: clamp(1.5rem, 5vw, 2.5rem); }
+      .cx-logo { height: 2.5rem; width: auto; align-self: flex-start; background: #fff; padding: 0.3rem 0.5rem; border-radius: 3px; }
+      .cx-login-title { font-size: clamp(2rem, 8vw, 2.75rem); margin-top: 0.5rem; }
+      .cx-msg { color: var(--h700); font-weight: 600; font-size: 0.9375rem; }
+      .cx-msg.cx-msg-info { color: var(--steel); }
+      .cx-notice { border-left: 3px solid var(--cab); background: color-mix(in srgb, var(--cab) 8%, var(--plate)); padding: 0.75rem 1rem; font-size: 0.9375rem; line-height: 1.45; }
+      #cx-preview { display: flex; flex-direction: column; gap: 0.5rem; }
+
+      /* Top bar */
+      .cx-demo { background: var(--h1100); color: var(--steel); padding: 0.6rem var(--pad); font-size: 0.9375rem; }
+      .cx-top { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; padding: 0.6rem var(--pad); background: var(--floor); border-bottom: 1px solid var(--rule); }
+      .cx-brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-stretch: 88%; }
+      .cx-logo-sm { height: 1.75rem; width: auto; background: #fff; padding: 0.2rem 0.35rem; border-radius: 3px; }
+      .cx-state { font-size: 0.875rem; color: var(--steel-3); }
+      .cx-state.cx-state-dirty { color: var(--steel); font-weight: 650; }
+      .cx-state.cx-state-dirty::before { content: ''; display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--h900); margin-right: 0.45rem; }
+      .cx-top-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+      .cx-account { position: relative; }
+      .cx-account summary { list-style: none; max-width: 14rem; }
+      .cx-account summary::-webkit-details-marker { display: none; }
+      .cx-account summary span { overflow: hidden; text-overflow: ellipsis; }
+      .cx-menu { position: absolute; right: 0; top: calc(100% + 0.35rem); min-width: 12rem; background: var(--plate); border: 1px solid var(--steel-3); border-radius: 3px; padding: 0.3rem; display: flex; flex-direction: column; }
+      .cx-menu button { text-align: left; padding: 0.6rem 0.75rem; border-radius: 2px; }
+      .cx-menu button:hover { background: var(--floor); }
+
+      /* Layout */
+      .cx-layout { display: grid; gap: 1.5rem; max-width: 84rem; margin-inline: auto; padding: 1.5rem var(--pad) 8rem; }
+      .cx-nav { display: flex; gap: 0.25rem; overflow-x: auto; padding-bottom: 0.25rem; }
+      .cx-navlink { flex: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.85rem; border-radius: 3px; text-align: left; font-weight: 550; color: var(--steel-2); white-space: nowrap; border: 1px solid transparent; }
+      .cx-navlink:hover { color: var(--steel); border-color: var(--rule); }
+      .cx-navlink[aria-current='true'] { background: var(--steel); color: #fff; }
+      .cx-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--h900); flex: none; }
+      @media (min-width: 960px) {
+        .cx-layout { grid-template-columns: 14rem minmax(0, 1fr); gap: 3rem; }
+        .cx-nav { flex-direction: column; overflow: visible; position: sticky; top: 5rem; align-self: start; }
+        .cx-navlink { justify-content: space-between; white-space: normal; }
+      }
+      .cx-main { min-width: 0; scroll-margin-top: 5rem; }
+      .cx-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--steel); }
+      .cx-title { font-size: clamp(2rem, 5vw, 3.25rem); }
+      .cx-blurb { margin-top: 0.6rem; color: var(--steel-2); max-width: 40em; }
+      .cx-views { display: inline-flex; border: 1px solid var(--steel-3); border-radius: 3px; overflow: hidden; }
+      .cx-views button { padding: 0.45rem 0.9rem; font-size: 0.9375rem; font-weight: 600; }
+      .cx-views button[aria-pressed='true'] { background: var(--steel); color: #fff; }
+      .cx-views button:focus-visible { outline-offset: -3px; }
+
+      /* Generated form */
+      .cx-editor { display: flex; flex-direction: column; }
+      .cx-block { padding-block: 1.75rem; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 1rem; }
+      .cx-grid { display: grid; gap: 1rem 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); align-items: start; }
+      .cx-wide { grid-column: 1 / -1; }
+      .cx-field label, .cx-group > legend { font-size: 0.9375rem; font-weight: 600; }
+      .cx-input { padding: 0.55rem 0.7rem; font-size: 1rem; }
+      textarea.cx-input { resize: vertical; line-height: 1.45; }
+      select.cx-input { appearance: auto; }
+      .cx-group { min-width: 0; border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; }
+      .cx-group > * { max-width: 100%; }
+      .cx-group > .cx-grid, .cx-group > .cx-cards, .cx-group > .cx-list, .cx-group > .cx-table-scroll { width: 100%; }
+      .cx-group > legend { padding: 0; margin-bottom: 0.5rem; }
+      .cx-block > .cx-group > legend { font-size: 1.375rem; font-stretch: 88%; font-weight: 700; letter-spacing: -0.005em; }
+      .cx-count { font-weight: 500; color: var(--steel-3); font-variant-numeric: tabular-nums; margin-left: 0.25rem; }
+      .cx-checkrow { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; font-size: 0.9375rem; }
+      .cx-check { width: 1.15rem; height: 1.15rem; accent-color: var(--cab); }
+
+      .cx-list { display: flex; flex-direction: column; gap: 0.4rem; }
+      .cx-adders { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.75rem; }
+      .cx-bulk { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+      .cx-row { display: flex; gap: 0.5rem; align-items: flex-start; }
+      .cx-row > :first-child { flex: 1; min-width: 0; }
+      .cx-controls { display: flex; gap: 0.15rem; flex: none; }
+      .cx-icon { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: 3px; color: var(--steel-2); font-size: 0.9375rem; }
+      .cx-icon:hover:not(:disabled) { background: color-mix(in srgb, var(--steel) 10%, transparent); color: var(--steel); }
+      .cx-icon.cx-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--h700) 14%, transparent); color: var(--h700); }
+
+      .cx-cards { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+      .cx-card { border-bottom: 1px solid var(--rule); }
+      .cx-card > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0; cursor: pointer; list-style: none; }
+      .cx-card > summary::-webkit-details-marker { display: none; }
+      .cx-card > summary::before { content: ''; width: 0.5rem; height: 0.5rem; border-right: 2px solid var(--steel-3); border-bottom: 2px solid var(--steel-3); transform: rotate(-45deg); transition: transform 0.15s; flex: none; margin-inline: 0.25rem 0.15rem; }
+      .cx-card[open] > summary::before { transform: rotate(45deg); }
+      .cx-card-title { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cx-card-body { padding: 0.75rem 0 1.5rem 1.4rem; border-left: 2px solid var(--cab); margin: 0.25rem 0 1rem 0.45rem; }
+      @media (max-width: 520px) { .cx-card-body { padding-left: 0.85rem; margin-left: 0.2rem; } }
+
+      .cx-table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--plate); }
+      .cx-table { border-collapse: collapse; width: 100%; }
+      .cx-table th, .cx-table td { padding: 0.2rem; vertical-align: middle; }
+      .cx-table th { text-align: left; font-size: 0.875rem; font-weight: 600; color: var(--steel-2); border-bottom: 1px solid var(--steel-3); padding: 0.35rem 0.2rem; }
+      .cx-table th:not(.cx-ctl-col), .cx-table td:not(.cx-ctl-col) { min-width: 9rem; }
+      .cx-table thead .cx-cell { font-weight: 650; }
+      .cx-cell { padding: 0.4rem 0.5rem; font-size: 0.9375rem; }
+      .cx-colhead { display: flex; align-items: center; gap: 0.15rem; }
+      .cx-ctl-col { width: 1%; white-space: nowrap; position: sticky; right: 0; background: var(--plate); }
+      .cx-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+      .cx-image { display: flex; gap: 0.5rem; align-items: center; }
+      .cx-image .cx-input { flex: 1; min-width: 0; }
+      .cx-thumb { width: 3.5rem; height: 2.6rem; object-fit: cover; border-radius: 2px; background: var(--rule); flex: none; }
+      .cx-image-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
+      .cx-json { min-height: 60vh; margin-top: 1.5rem; }
+
+      /* History */
+      .cx-history { padding-top: 2.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+      .cx-revs { width: 100%; }
+      .cx-revs > li { padding: 0.7rem 0; }
+      .cx-rev { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+      .cx-rev div { display: flex; flex-direction: column; min-width: 0; }
+
+      /* Save bar */
+      .cx-savebar { position: fixed; inset: auto 0 0 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.6rem var(--pad); background: var(--plate); border-top: 1px solid var(--steel-3); }
+      .cx-savebar .cx-state { flex: 1 1 12rem; }
+      .cx-savebar .cx-input { flex: 3 1 14rem; width: auto; }
+
+      /* Dialogs and messages */
+      .cx-dialog { width: min(30rem, calc(100vw - 2rem)); margin: auto; border: 1px solid var(--steel-3); border-radius: 4px; background: var(--plate); color: var(--steel); padding: 1.5rem; }
+      .cx-dialog::backdrop { background: color-mix(in srgb, var(--night) 55%, transparent); }
+      .cx-dialog-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+      .cx-toast { position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%); z-index: 40; width: max-content; max-width: min(36rem, calc(100vw - 2rem)); background: var(--steel); color: var(--floor); padding: 0.75rem 1.1rem; border-radius: 3px; font-size: 0.9375rem; font-weight: 550; }
+      .cx-toast.cx-toast-bad { background: var(--h700); color: #fff; }
+    </style>
   </body>
 </html>

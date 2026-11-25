@@ -27,3 +27,7 @@ screenshots/
 scrape/
 wrangler-*.log
 .wrangler/
+
+# content console (local)
+.dev.vars
+.cms-admin.sql

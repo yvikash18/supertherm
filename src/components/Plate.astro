@@ -1,0 +1,41 @@
+---
+// Rating plate: the company's numbers set like the data plate riveted to a machine.
+import { stats } from '../data/content';
+const cells = stats.map((s: any) => ({ digits: String(s.value).split(''), suffix: s.suffix, label: s.label, sub: s.sub }));
+---
+
+<section class="plate" aria-label="Supertherm in numbers">
+  <dl class="wrap grid" data-odo>
+    {cells.map((c, ci) => (
+      <div class="cell">
+        <dd class="figure" aria-label={`${c.digits.join('')}${c.suffix}`}>
+          {c.digits.map((d, di) => (
+            <span class="odo" style={`--n:${d};--k:${ci * 2 + di}`} aria-hidden="true"><span>0<br />1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9</span></span>
+          ))}<span aria-hidden="true">{c.suffix}</span>
+        </dd>
+        <dt><strong>{c.label}</strong><span>{c.sub}</span></dt>
+      </div>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .plate { border-block: 1px solid var(--line); background: var(--plate); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .cell { display: flex; flex-direction: column; gap: 0.6rem; padding: clamp(1.5rem, 3vw, 2.5rem) 0; padding-right: 1rem; }
+  .cell + .cell { border-left: 1px solid var(--line); padding-left: clamp(1rem, 2.5vw, 2rem); }
+  dt { display: flex; flex-direction: column; order: 2; }
+  dt strong { font-weight: 650; }
+  dt span { color: var(--fg-3); font-size: 0.875rem; }
+  @media (max-width: 767px) {
+    .cell:nth-child(odd) { border-left: 0; padding-left: 0; }
+    .cell:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  }
+  @media (min-width: 768px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+
+  /* Mechanical counter: each digit is a drum that rolls to its value */
+  .odo { display: inline-block; height: 0.9em; line-height: 0.9; overflow: hidden; vertical-align: top; }
+  .odo > span { display: block; transform: translateY(calc(var(--n) * -0.9em)); }
+  :global(.js) .odo > span { transform: translateY(0); transition: transform 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); transition-delay: calc(var(--k) * 70ms); }
+  :global(.js) .is-in .odo > span { transform: translateY(calc(var(--n) * -0.9em)); }
+</style>
